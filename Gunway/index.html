@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gunway</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            background-color: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #game-container {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #555;
+            position: relative;
+            overflow: hidden;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png'), #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        #player, #bot {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+        }
+
+        #player img, #bot img {
+            width: 100%;
+            height: 100%;
+        }
+
+        #player {
+            bottom: 10px;
+            left: 370px; /* Start at center */
+        }
+
+        #bot {
+            top: 10px;
+            left: 370px; /* Start at center */
+        }
+
+        .missile {
+            width: 10px;
+            height: 25px;
+            position: absolute;
+            background-color: #ffeb3b;
+            border-radius: 5px;
+            box-shadow: 0 0 15px #ffeb3b, 0 0 25px #fff;
+        }
+        
+        .bot-missile {
+            background-color: #ff4136;
+            box-shadow: 0 0 15px #ff4136, 0 0 25px #fff;
+        }
+
+        #player-hp, #bot-hp {
+            position: absolute;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        #player-hp {
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            color: #28a745; /* Player color */
+        }
+
+        #bot-hp {
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            color: #dc3545; /* Bot color */
+        }
+
+        #player-missiles, #bot-missiles {
+            position: absolute;
+            color: #ffc107;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        #player-missiles {
+            top: calc(50% + 40px);
+            left: 20px;
+            transform: translateY(-50%);
+        }
+
+        #bot-missiles {
+            top: calc(50% + 40px);
+            right: 20px;
+            transform: translateY(-50%);
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        #move-left-button, #move-right-button, #fire-button {
+            width: 150px;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+            border: 2px solid #777;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        #move-left-button:hover, #move-right-button:hover, #fire-button:hover {
+            background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
+            border-color: #999;
+        }
+        
+        #move-left-button:active, #move-right-button:active, #fire-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        #start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(145deg, #28a745, #218838);
+            border: 2px solid #1e7e34;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+            z-index: 10; /* Ensure it is on top */
+        }
+
+        #start-button:hover {
+            background: linear-gradient(145deg, #2ebf4f, #249d40);
+        }
+
+        #game-over-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffc107;
+            font-size: 72px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 4px 4px 8px #000;
+            display: none; /* Hidden by default */
+        }
+
+        #game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 80px;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow:
+                0 0 7px #fff,
+                0 0 10px #fff,
+                0 0 21px #fff,
+                0 0 42px #0af,
+                0 0 82px #0af,
+                0 0 92px #0af,
+                0 0 102px #0af,
+                0 0 151px #0af;
+            animation: flicker 1.5s infinite alternate; 
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow:
+                    0 0 4px #fff,
+                    0 0 11px #fff,
+                    0 0 19px #fff,
+                    0 0 40px #0af,
+                    0 0 80px #0af,
+                    0 0 90px #0af,
+                    0 0 100px #0af,
+                    0 0 150px #0af;
+            }
+            20%, 24%, 55% {        
+                text-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="game-title">GUNWAY</h1>
+    <div id="game-container">
+        <div id="player-hp">10</div>
+        <div id="bot-hp">10</div>
+        <div id="player-missiles"></div>
+        <div id="bot-missiles"></div>
+
+        <div id="player">
+            <img src="https://placehold.co/60x60/28a745/white?text=Player" alt="Player">
+        </div>
+        <div id="bot">
+            <img src="https://placehold.co/60x60/dc3545/white?text=Bot" alt="Bot">
+        </div>
+        
+        <div id="game-over-message"></div>
+        <button id="start-button">Start</button>
+    </div>
+
+    <div class="buttons-container" style="display: none;">
+        <button id="move-left-button">Left</button>
+        <button id="fire-button">Fire</button>
+        <button id="move-right-button">Right</button>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        // --- DOM Elements ---
+        const gameContainer = $('#game-container');
+        const player = $('#player');
+        const bot = $('#bot');
+        const startButton = $('#start-button');
+        const buttonsContainer = $('.buttons-container');
+        const gameOverMessage = $('#game-over-message');
+
+        // --- Game Settings & State ---
+        const gameWidth = gameContainer.width();
+        const playerWidth = player.width();
+        const positions = {
+            left: 50,
+            center: (gameWidth / 2) - (playerWidth / 2),
+            right: gameWidth - playerWidth - 50
+        };
+
+        let playerHp, botHp, playerMissiles, botMissiles, playerPosition, gameOver;
+        let botMoveInterval, botShootInterval, gameLoopInterval;
+
+        // --- Core Game Functions ---
+
+        function initializeGameState() {
+            playerHp = 10;
+            botHp = 10;
+            playerMissiles = 30;
+            botMissiles = 30;
+            playerPosition = 'center';
+            gameOver = false;
+            
+            player.css('left', positions.center + 'px');
+            bot.css('left', positions.center + 'px');
+            
+            updateHpDisplays();
+            updateMissileDisplays();
+        }
+
+        function startGame() {
+            initializeGameState();
+
+            buttonsContainer.show();
+            startButton.css('top', '50%').hide(); // Reset button position and hide
+            gameOverMessage.hide();
+
+            $('#move-left-button, #move-right-button, #fire-button').prop('disabled', false).css('cursor', 'pointer');
+
+            clearInterval(botMoveInterval);
+            clearInterval(botShootInterval);
+            clearInterval(gameLoopInterval);
+
+            botMoveInterval = setInterval(moveBot, 2000);
+            botShootInterval = setInterval(shootBot, 1500);
+            gameLoopInterval = setInterval(gameLoop, 50);
+        }
+
+        function endGame(playerWon) {
+            if (gameOver) return;
+            gameOver = true;
+
+            clearInterval(botMoveInterval);
+            clearInterval(botShootInterval);
+            clearInterval(gameLoopInterval);
+
+            const message = playerWon ? "You Win!" : "Game Over";
+            gameOverMessage.text(message).fadeIn();
+            
+            buttonsContainer.hide();
+            startButton.text('Restart').css('top', '65%').show(); // Move button down
+        }
+
+        // --- Player & Bot Actions ---
+
+        function movePlayer(direction) {
+            if (gameOver) return;
+            if (direction === 'left') {
+                playerPosition = 'left';
+                player.animate({ left: positions.left + 'px' }, 200);
+            } else if (direction === 'right') {
+                playerPosition = 'right';
+                player.animate({ left: positions.right + 'px' }, 200);
+            } else if (direction === 'center') {
+                playerPosition = 'center';
+                player.animate({ left: positions.center + 'px' }, 200);
+            }
+        }
+        
+        function moveBot() {
+            if (gameOver) return;
+            const rand = Math.random();
+            if (rand < 0.33) {
+                bot.animate({ left: positions.left + 'px' }, 500);
+            } else if (rand < 0.66) {
+                bot.animate({ left: positions.center + 'px' }, 500);
+            } else {
+                bot.animate({ left: positions.right + 'px' }, 500);
+            }
+        }
+
+        function shootBot() {
+            if (gameOver || botMissiles <= 0) return;
+            botMissiles--;
+            updateMissileDisplays();
+            createMissile(bot.position().left + bot.width() / 2 - 5, bot.position().top + bot.height(), false);
+        }
+
+        function createMissile(x, y, isPlayerMissile) {
+            const missile = $('<div class="missile"></div>');
+            if (!isPlayerMissile) {
+                missile.addClass('bot-missile');
+            }
+            missile.css({ left: x + 'px', top: y + 'px' });
+            gameContainer.append(missile);
+
+            const targetY = isPlayerMissile ? -30 : gameContainer.height() + 30;
+            missile.animate({ top: targetY + 'px' }, 2000, 'linear', function() {
+                missile.remove();
+            });
+        }
+
+        // --- Game Loop & Collision ---
+
+        function gameLoop() {
+            if (gameOver) return;
+
+            $('.missile:not(.bot-missile)').each(function() {
+                const missile = $(this);
+                if (checkCollision(missile, bot)) {
+                    missile.remove();
+                    botHp--;
+                    updateHpDisplays();
+                    if (botHp <= 0) endGame(true);
+                }
+            });
+
+            $('.bot-missile').each(function() {
+                const missile = $(this);
+                if (checkCollision(missile, player)) {
+                    missile.remove();
+                    playerHp--;
+                    updateHpDisplays();
+                    if (playerHp <= 0) endGame(false);
+                }
+            });
+
+            if (playerMissiles <= 0 && $('.missile:not(.bot-missile)').length === 0 && botHp > 0) {
+                endGame(false);
+            }
+        }
+
+        function checkCollision(el1, el2) {
+            if (!el1 || !el2 || el1.length === 0 || el2.length === 0) return false;
+            const pos1 = el1.offset();
+            const pos2 = el2.offset();
+            const rect1 = { x: pos1.left, y: pos1.top, width: el1.width(), height: el1.height() };
+            const rect2 = { x: pos2.left, y: pos2.top, width: el2.width(), height: el2.height() };
+            return (rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x && rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y);
+        }
+
+        // --- UI Updates ---
+
+        function updateHpDisplays() {
+            $('#player-hp').text('HP: ' + playerHp);
+            $('#bot-hp').text('HP: ' + botHp);
+        }
+
+        function updateMissileDisplays() {
+            $('#player-missiles').text('Ammo: ' + playerMissiles);
+            $('#bot-missiles').text('Ammo: ' + botMissiles);
+        }
+
+        // --- Event Handlers ---
+
+        $('#move-left-button').on('click', function() {
+            if (playerPosition === 'right') movePlayer('center');
+            else if (playerPosition === 'center') movePlayer('left');
+        });
+
+        $('#move-right-button').on('click', function() {
+            if (playerPosition === 'left') movePlayer('center');
+            else if (playerPosition === 'center') movePlayer('right');
+        });
+
+        $('#fire-button').on('click', function() {
+            if (gameOver || playerMissiles <= 0) return;
+            playerMissiles--;
+            updateMissileDisplays();
+            createMissile(player.position().left + playerWidth / 2 - 5, player.position().top, true);
+        });
+
+        $(document).on('keydown', function(e) {
+            if (gameOver) return;
+            switch (e.code) {
+                case 'ArrowLeft':
+                    if (playerPosition === 'right') movePlayer('center');
+                    else if (playerPosition === 'center') movePlayer('left');
+                    break;
+                case 'ArrowRight':
+                    if (playerPosition === 'left') movePlayer('center');
+                    else if (playerPosition === 'center') movePlayer('right');
+                    break;
+                case 'Space':
+                    e.preventDefault();
+                    $('#fire-button').trigger('click');
+                    break;
+            }
+        });
+
+        startButton.on('click', startGame);
+    });
+    </script>
+
+</body>
+</html>
