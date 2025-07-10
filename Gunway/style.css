@@ -181,6 +181,38 @@
             background: linear-gradient(145deg, #2ebf4f, #249d40);
         }
 
+        #difficulty-selection {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .difficulty-button {
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(145deg, #007bff, #0056b3);
+            border: 2px solid #004085;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .difficulty-button:hover {
+            background: linear-gradient(145deg, #0056b3, #007bff);
+        }
+
+        .difficulty-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
         #game-over-message {
             position: absolute;
             top: 50%;

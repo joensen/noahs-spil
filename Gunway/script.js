@@ -6,6 +6,10 @@ $(document).ready(function() {
         const startButton = $('#start-button');
         const buttonsContainer = $('.buttons-container');
         const gameOverMessage = $('#game-over-message');
+        const difficultySelection = $('#difficulty-selection');
+        const easyButton = $('#easy-button');
+        const mediumButton = $('#medium-button');
+        const hardButton = $('#hard-button');
 
         // --- Game Settings & State ---
         const gameWidth = gameContainer.width();
@@ -17,6 +21,7 @@ $(document).ready(function() {
         let isBotShooting = true;
         let canPlayerShoot = true; // New variable for player cooldown
         const playerShootCooldown = 200; // 200ms cooldown
+        let currentDifficulty = 'medium'; // Default difficulty
 
         // --- Core Game Functions ---
 
@@ -37,7 +42,18 @@ $(document).ready(function() {
         function toggleBotShooting() {
             isBotShooting = !isBotShooting;
             // Shoot for 3 seconds, pause for 250ms
-            const nextToggle = isBotShooting ? 3000 : 500;
+            let shootDuration = 3000;
+            let pauseDuration = 500;
+
+            if (currentDifficulty === 'easy') {
+                shootDuration = 2000; // Bot shoots for shorter duration
+                pauseDuration = 1000; // Bot pauses for longer duration
+            } else if (currentDifficulty === 'hard') {
+                shootDuration = 4000; // Bot shoots for longer duration
+                pauseDuration = 0;    // No pause for hard
+            }
+
+            const nextToggle = isBotShooting ? shootDuration : pauseDuration;
             setTimeout(toggleBotShooting, nextToggle);
         }
 
@@ -48,6 +64,7 @@ $(document).ready(function() {
             $('#move-left-button, #move-right-button').hide();
             startButton.css('top', '50%').hide(); // Reset button position and hide
             gameOverMessage.hide();
+            difficultySelection.hide();
 
             $('#fire-button').prop('disabled', false).css('cursor', 'pointer');
 
@@ -61,7 +78,13 @@ $(document).ready(function() {
             
             // Start the shooting cycle
             isBotShooting = true;
-            setTimeout(toggleBotShooting, 2000);
+            let initialBotPause = 2000;
+            if (currentDifficulty === 'easy') {
+                initialBotPause = 4000; // Longer pause for easy
+            } else if (currentDifficulty === 'hard') {
+                initialBotPause = 0; // No initial pause for hard
+            }
+            setTimeout(toggleBotShooting, initialBotPause);
         }
 
         function endGame(playerWon) {
@@ -77,6 +100,7 @@ $(document).ready(function() {
             
             buttonsContainer.hide();
             startButton.text('Restart').css('top', '65%').show(); // Move button down
+            difficultySelection.show();
         }
 
         // --- Player & Bot Actions ---
@@ -204,4 +228,22 @@ $(document).ready(function() {
         });
 
         startButton.on('click', startGame);
+
+        easyButton.on('click', function() {
+            currentDifficulty = 'easy';
+            difficultySelection.hide();
+            startButton.show();
+        });
+
+        mediumButton.on('click', function() {
+            currentDifficulty = 'medium';
+            difficultySelection.hide();
+            startButton.show();
+        });
+
+        hardButton.on('click', function() {
+            currentDifficulty = 'hard';
+            difficultySelection.hide();
+            startButton.show();
+        });
     });
