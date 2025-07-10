@@ -23,11 +23,28 @@
             width: 60px;
             height: 60px;
             position: absolute;
+            transform: scale(2);
+        }
+
+        #bot {
+            transform: scale(2) rotate(180deg);
         }
 
         #player img, #bot img {
             width: 100%;
             height: 100%;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            position: relative;
+        }
+
+        #player img {
+            left: -15px;
+        }
+
+        #bot img {
+            left: 15px;
         }
 
         #player {
@@ -44,9 +61,9 @@
             width: 10px;
             height: 25px;
             position: absolute;
-            background-color: #ffeb3b;
+            background-color: #3399ff;
             border-radius: 5px;
-            box-shadow: 0 0 15px #ffeb3b, 0 0 25px #fff;
+            box-shadow: 0 0 15px #3399ff, 0 0 25px #fff;
         }
         
         .bot-missile {
@@ -65,7 +82,7 @@
             top: 50%;
             left: 20px;
             transform: translateY(-50%);
-            color: #28a745; /* Player color */
+            color: #3399ff; /* Player color */
         }
 
         #bot-hp {

@@ -185,7 +185,7 @@
             if (gameOver || playerMissiles <= 0) return;
             playerMissiles--;
             updateMissileDisplays();
-            createMissile(player.position().left + playerWidth / 2 - 5, player.position().top, true);
+            createMissile(player.position().left + playerWidth / 2, player.position().top, true);
         });
 
         $(document).on('keydown', function(e) {
