@@ -1,4 +1,4 @@
-    $(document).ready(function() {
+$(document).ready(function() {
         // --- DOM Elements ---
         const gameContainer = $('#game-container');
         const player = $('#player');
@@ -10,48 +10,58 @@
         // --- Game Settings & State ---
         const gameWidth = gameContainer.width();
         const playerWidth = player.width();
-        const positions = {
-            left: 50,
-            center: (gameWidth / 2) - (playerWidth / 2),
-            right: gameWidth - playerWidth - 50
-        };
-
-        let playerHp, botHp, playerMissiles, botMissiles, playerPosition, gameOver;
+        
+        let playerHp, botHp, playerMissiles, gameOver;
         let botMoveInterval, botShootInterval, gameLoopInterval;
+        let keys = {};
+        let isBotShooting = true;
+        let canPlayerShoot = true; // New variable for player cooldown
+        const playerShootCooldown = 200; // 200ms cooldown
 
         // --- Core Game Functions ---
 
         function initializeGameState() {
-            playerHp = 10;
-            botHp = 10;
-            playerMissiles = 30;
-            botMissiles = 30;
-            playerPosition = 'center';
+            playerHp = 20;
+            botHp = 20;
+            playerMissiles = 200;
             gameOver = false;
+            canPlayerShoot = true; // Reset cooldown on game start
             
-            player.css('left', positions.center + 'px');
-            bot.css('left', positions.center + 'px');
+            player.css('left', (gameWidth / 2) - (playerWidth / 2) + 'px');
+            bot.css('left', (gameWidth / 2) - (playerWidth / 2) + 'px');
             
             updateHpDisplays();
             updateMissileDisplays();
+        }
+
+        function toggleBotShooting() {
+            isBotShooting = !isBotShooting;
+            // Shoot for 2 seconds, pause for 1 second
+            const nextToggle = isBotShooting ? 2000 : 1000;
+            setTimeout(toggleBotShooting, nextToggle);
         }
 
         function startGame() {
             initializeGameState();
 
             buttonsContainer.show();
+            $('#move-left-button, #move-right-button').hide();
             startButton.css('top', '50%').hide(); // Reset button position and hide
             gameOverMessage.hide();
 
-            $('#move-left-button, #move-right-button, #fire-button').prop('disabled', false).css('cursor', 'pointer');
+            $('#fire-button').prop('disabled', false).css('cursor', 'pointer');
 
             clearInterval(botMoveInterval);
             clearInterval(botShootInterval);
             clearInterval(gameLoopInterval);
 
             botMoveInterval = setInterval(moveBot, 2000);
-            botShootInterval = setInterval(shootBot, 1500);
-            gameLoopInterval = setInterval(gameLoop, 50);
+            botShootInterval = setInterval(shootBot, 100);
+            gameLoopInterval = setInterval(gameLoop, 16); // ~60 FPS
+            
+            // Start the shooting cycle
+            isBotShooting = true;
+            setTimeout(toggleBotShooting, 2000);
         }
 
         function endGame(playerWon) {
@@ -70,37 +80,16 @@
         }
 
         // --- Player & Bot Actions ---
-
-        function movePlayer(direction) {
-            if (gameOver) return;
-            if (direction === 'left') {
-                playerPosition = 'left';
-                player.animate({ left: positions.left + 'px' }, 200);
-            } else if (direction === 'right') {
-                playerPosition = 'right';
-                player.animate({ left: positions.right + 'px' }, 200);
-            } else if (direction === 'center') {
-                playerPosition = 'center';
-                player.animate({ left: positions.center + 'px' }, 200);
-            }
-        }
         
         function moveBot() {
             if (gameOver) return;
-            const rand = Math.random();
-            if (rand < 0.33) {
-                bot.animate({ left: positions.left + 'px' }, 500);
-            } else if (rand < 0.66) {
-                bot.animate({ left: positions.center + 'px' }, 500);
-            } else {
-                bot.animate({ left: positions.right + 'px' }, 500);
-            }
+            const playerX = player.position().left;
+            bot.animate({ left: playerX + 'px' }, 1000);
         }
 
         function shootBot() {
-            if (gameOver || botMissiles <= 0) return;
-            botMissiles--;
-            updateMissileDisplays();
+            if (gameOver || !isBotShooting) return;
+            
             createMissile(bot.position().left + bot.width() / 2 - 5, bot.position().top + bot.height(), false);
         }
 
@@ -123,12 +112,25 @@
         function gameLoop() {
             if (gameOver) return;
 
+            // Player Movement
+            let playerSpeed = 10;
+            let currentPos = parseInt(player.css('left'));
+
+            if (keys['ArrowLeft'] && currentPos > 0) {
+                player.css('left', Math.max(0, currentPos - playerSpeed) + 'px');
+            }
+            if (keys['ArrowRight'] && currentPos < gameWidth - playerWidth) {
+                player.css('left', Math.min(gameWidth - playerWidth, currentPos + playerSpeed) + 'px');
+            }
+
             $('.missile:not(.bot-missile)').each(function() {
                 const missile = $(this);
                 if (checkCollision(missile, bot)) {
                     missile.remove();
                     botHp--;
                     updateHpDisplays();
+                    bot.addClass('bot-hit');
+                    setTimeout(() => bot.removeClass('bot-hit'), 200);
                     if (botHp <= 0) endGame(true);
                 }
             });
@@ -139,6 +141,8 @@
                     missile.remove();
                     playerHp--;
                     updateHpDisplays();
+                    player.addClass('hit');
+                    setTimeout(() => player.removeClass('hit'), 200);
                     if (playerHp <= 0) endGame(false);
                 }
             });
@@ -166,44 +170,37 @@
 
         function updateMissileDisplays() {
             $('#player-missiles').text('Ammo: ' + playerMissiles);
-            $('#bot-missiles').text('Ammo: ' + botMissiles);
         }
 
         // --- Event Handlers ---
 
-        $('#move-left-button').on('click', function() {
-            if (playerPosition === 'right') movePlayer('center');
-            else if (playerPosition === 'center') movePlayer('left');
-        });
-
-        $('#move-right-button').on('click', function() {
-            if (playerPosition === 'left') movePlayer('center');
-            else if (playerPosition === 'center') movePlayer('right');
-        });
-
         $('#fire-button').on('click', function() {
-            if (gameOver || playerMissiles <= 0) return;
+            if (gameOver || playerMissiles <= 0 || !canPlayerShoot) return;
+            canPlayerShoot = false;
+            setTimeout(() => {
+                canPlayerShoot = true;
+            }, playerShootCooldown);
             playerMissiles--;
             updateMissileDisplays();
-            createMissile(player.position().left + playerWidth / 2, player.position().top, true);
+            createMissile(player.position().left + player.width() / 2 - 10, player.position().top, true);
         });
 
         $(document).on('keydown', function(e) {
-            if (gameOver) return;
-            switch (e.code) {
-                case 'ArrowLeft':
-                    if (playerPosition === 'right') movePlayer('center');
-                    else if (playerPosition === 'center') movePlayer('left');
-                    break;
-                case 'ArrowRight':
-                    if (playerPosition === 'left') movePlayer('center');
-                    else if (playerPosition === 'center') movePlayer('right');
-                    break;
-                case 'Space':
-                    e.preventDefault();
-                    $('#fire-button').trigger('click');
-                    break;
+            keys[e.code] = true;
+            if (e.code === 'Enter') {
+                e.preventDefault();
+                if (startButton.is(':visible')) {
+                    startButton.trigger('click');
+                }
             }
+            if (e.code === 'Space') {
+                e.preventDefault();
+                $('#fire-button').trigger('click');
+            }
+        });
+
+        $(document).on('keyup', function(e) {
+            keys[e.code] = false;
         });
 
         startButton.on('click', startGame);
