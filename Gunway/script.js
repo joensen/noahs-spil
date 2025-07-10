@@ -23,7 +23,7 @@ $(document).ready(function() {
         function initializeGameState() {
             playerHp = 20;
             botHp = 20;
-            playerMissiles = 50;
+            playerMissiles = 30;
             gameOver = false;
             canPlayerShoot = true; // Reset cooldown on game start
             
@@ -36,8 +36,8 @@ $(document).ready(function() {
 
         function toggleBotShooting() {
             isBotShooting = !isBotShooting;
-            // Shoot for 2 seconds, pause for 1 second
-            const nextToggle = isBotShooting ? 3000 : 250;
+            // Shoot for 3 seconds, pause for 250ms
+            const nextToggle = isBotShooting ? 3000 : 500;
             setTimeout(toggleBotShooting, nextToggle);
         }
 
