@@ -23,7 +23,7 @@ $(document).ready(function() {
         function initializeGameState() {
             playerHp = 20;
             botHp = 20;
-            playerMissiles = 200;
+            playerMissiles = 50;
             gameOver = false;
             canPlayerShoot = true; // Reset cooldown on game start
             
@@ -37,7 +37,7 @@ $(document).ready(function() {
         function toggleBotShooting() {
             isBotShooting = !isBotShooting;
             // Shoot for 2 seconds, pause for 1 second
-            const nextToggle = isBotShooting ? 2000 : 1000;
+            const nextToggle = isBotShooting ? 3000 : 250;
             setTimeout(toggleBotShooting, nextToggle);
         }
 
@@ -113,7 +113,7 @@ $(document).ready(function() {
             if (gameOver) return;
 
             // Player Movement
-            let playerSpeed = 10;
+            let playerSpeed = 15;
             let currentPos = parseInt(player.css('left'));
 
             if (keys['ArrowLeft'] && currentPos > 0) {
