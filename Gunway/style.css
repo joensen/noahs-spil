@@ -253,6 +253,32 @@
             animation: firework-animation 1s ease-out forwards;
         }
 
+        .explosion {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            animation: explosion-animation 3s forwards;
+        }
+
+        @keyframes explosion-animation {
+            from {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 0;
+            }
+        }
+
         @keyframes firework-animation {
             0% {
                 transform: scale(0);

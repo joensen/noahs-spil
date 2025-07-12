@@ -59,6 +59,8 @@ $(document).ready(function() {
         function startGame() {
             initializeGameState();
             gameOverMessage.removeClass('win');
+            player.show();
+            bot.show();
 
             buttonsContainer.show();
             $('#move-left-button, #move-right-button').hide();
@@ -104,18 +106,56 @@ $(document).ready(function() {
             clearInterval(botShootInterval);
             clearInterval(gameLoopInterval);
 
+            player.stop(true, true);
+            bot.stop(true, true);
+
             const message = playerWon ? "You Win!" : "Game Over";
             gameOverMessage.text(message);
 
             if (playerWon) {
                 gameOverMessage.addClass('win');
                 createFireworks();
+                const pos = bot.position();
+                bot.hide();
+                createExplosion(pos.left, pos.top);
+            } else {
+                const pos = player.position();
+                player.hide();
+                createExplosion(pos.left, pos.top);
             }
+            playSound('explosion-sound');
 
             gameOverMessage.fadeIn();
             
             buttonsContainer.hide();
             difficultySelection.show();
+        }
+
+        function createExplosion(x, y) {
+            const explosion = $('<div class="explosion"></div>');
+            explosion.css({ left: (x + 10) + 'px', top: (y + 10) + 'px' });
+            gameContainer.append(explosion);
+
+            for (let i = 0; i < 30; i++) {
+                const particle = $('<div class="particle"></div>');
+                const angle = Math.random() * 360;
+                const distance = Math.random() * 100 + 50;
+                const particleX = Math.cos(angle) * distance;
+                const particleY = Math.sin(angle) * distance;
+
+                particle.css({
+                    'left': '50px',
+                    'top': '50px',
+                    '--x': particleX + 'px',
+                    '--y': particleY + 'px'
+                });
+
+                explosion.append(particle);
+            }
+
+            setTimeout(() => {
+                explosion.remove();
+            }, 3000);
         }
 
         function createFireworks() {
@@ -190,6 +230,7 @@ $(document).ready(function() {
                     botHp--;
                     updateHpDisplays();
                     bot.addClass('bot-hit');
+                    playSound('hit-bot-sound');
                     setTimeout(() => bot.removeClass('bot-hit'), 200);
                     if (botHp <= 0) endGame(true);
                 }
@@ -202,6 +243,7 @@ $(document).ready(function() {
                     playerHp--;
                     updateHpDisplays();
                     player.addClass('hit');
+                    playSound('hit-player-sound');
                     setTimeout(() => player.removeClass('hit'), 200);
                     if (playerHp <= 0) endGame(false);
                 }
@@ -219,6 +261,14 @@ $(document).ready(function() {
             const rect1 = { x: pos1.left, y: pos1.top, width: el1.width(), height: el1.height() };
             const rect2 = { x: pos2.left, y: pos2.top, width: el2.width(), height: el2.height() };
             return (rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x && rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y);
+        }
+
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play();
+            }
         }
 
         // --- UI Updates ---
