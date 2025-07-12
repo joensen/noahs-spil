@@ -370,6 +370,58 @@
                         e.dataTransfer.setDragImage(canvasElement, 20, 20);
                         e.dataTransfer.effectAllowed = 'copy';
                     });
+
+                    const handleTouchStart = (e) => {
+                        e.preventDefault();
+                        startGame();
+                        draggingIngredient = {
+                            type: e.currentTarget.dataset.type,
+                            color: e.currentTarget.dataset.color,
+                            shape: e.currentTarget.dataset.shape,
+                        };
+
+                        const touch = e.touches[0];
+                        const clone = document.createElement('canvas');
+                        clone.width = 40;
+                        clone.height = 40;
+                        const pCtx = clone.getContext('2d');
+                        pCtx.translate(20, 20);
+                        drawShape(pCtx, draggingIngredient.shape, draggingIngredient.color, 30);
+
+                        clone.style.position = 'absolute';
+                        clone.style.left = (touch.pageX - 20) + 'px';
+                        clone.style.top = (touch.pageY - 20) + 'px';
+                        clone.style.pointerEvents = 'none';
+                        clone.style.zIndex = '1000';
+                        clone.id = 'dragging-clone';
+                        document.body.appendChild(clone);
+
+                        const handleTouchMove = (moveEvent) => {
+                            const moveTouch = moveEvent.touches[0];
+                            clone.style.left = (moveTouch.pageX - 20) + 'px';
+                            clone.style.top = (moveTouch.pageY - 20) + 'px';
+                        };
+
+                        const handleTouchEnd = (endEvent) => {
+                            document.body.removeChild(clone);
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
+
+                            const endTouch = endEvent.changedTouches[0];
+                            const canvasRect = canvas.getBoundingClientRect();
+
+                            if (endTouch.clientX > canvasRect.left && endTouch.clientX < canvasRect.right &&
+                                endTouch.clientY > canvasRect.top && endTouch.clientY < canvasRect.bottom) {
+                                handleDrop(endTouch.clientX - canvasRect.left, endTouch.clientY - canvasRect.top);
+                            }
+                            draggingIngredient = null;
+                        };
+
+                        document.addEventListener('touchmove', handleTouchMove);
+                        document.addEventListener('touchend', handleTouchEnd);
+                    };
+
+                    div.addEventListener('touchstart', handleTouchStart, { passive: false });
                     ingredientPalette.appendChild(div);
                 });
             }
