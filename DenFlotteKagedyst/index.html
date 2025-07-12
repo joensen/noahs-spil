@@ -376,12 +376,37 @@
 
             // --- Drag and Drop Logic ---
 
-            canvas.addEventListener('mousedown', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+            function handleDragStart(e) {
+                startGame(); // Start the game on first drag
+                draggingIngredient = {
+                    type: e.currentTarget.dataset.type,
+                    color: e.currentTarget.dataset.color,
+                    shape: e.currentTarget.dataset.shape,
+                };
+                if (e.type === 'dragstart') {
+                    const canvasElement = e.currentTarget.querySelector('canvas');
+                    e.dataTransfer.setDragImage(canvasElement, 20, 20);
+                    e.dataTransfer.effectAllowed = 'copy';
+                }
+            }
 
-                // Find if an ingredient on the canvas was clicked
+            function handleMove(x, y) {
+                if (draggedFromCanvasInfo) {
+                    draggedFromCanvasInfo.ingredient.x = x - draggedFromCanvasInfo.offsetX;
+                    draggedFromCanvasInfo.ingredient.y = y - draggedFromCanvasInfo.offsetY;
+                    drawGame(); // Redraw to show the ingredient moving
+                }
+            }
+
+            function handleDrop(x, y) {
+                if (draggingIngredient) {
+                    placedIngredients.push({ ...draggingIngredient, x, y });
+                    draggingIngredient = null;
+                    drawGame();
+                }
+            }
+
+            function handleCanvasPress(x, y) {
                 let clickedIngredientIndex = -1;
                 for (let i = placedIngredients.length - 1; i >= 0; i--) {
                     const ing = placedIngredients[i];
@@ -394,7 +419,6 @@
 
                 if (clickedIngredientIndex !== -1) {
                     startGame(); // Start the game on first move
-                    // Start dragging an existing ingredient
                     const [ingredient] = placedIngredients.splice(clickedIngredientIndex, 1);
                     draggedFromCanvasInfo = {
                         ingredient: ingredient,
@@ -402,64 +426,48 @@
                         offsetY: y - ingredient.y
                     };
                     canvas.style.cursor = 'grabbing';
-                    drawGame(); // Redraw to remove the ingredient temporarily
+                    drawGame();
                 }
-            });
+            }
 
-            canvas.addEventListener('mousemove', (e) => {
+            function handleCanvasRelease(x, y) {
                 if (draggedFromCanvasInfo) {
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    draggedFromCanvasInfo.ingredient.x = x - draggedFromCanvasInfo.offsetX;
-                    draggedFromCanvasInfo.ingredient.y = y - draggedFromCanvasInfo.offsetY;
-                    drawGame(); // Redraw to show the ingredient moving
-                }
-            });
-
-            canvas.addEventListener('mouseup', (e) => {
-                if (draggedFromCanvasInfo) {
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-
-                    // Check if it's dropped inside the canvas
                     if (x > 0 && x < canvas.width && y > 0 && y < canvas.height) {
-                        draggedFromCanvasInfo.ingredient.x = x - draggedFromCanvasInfo.offsetX;
-                        draggedFromCanvasInfo.ingredient.y = y - draggedFromCanvasInfo.offsetY;
                         placedIngredients.push(draggedFromCanvasInfo.ingredient);
-                    } // If not, it's thrown away (not pushed back)
-
+                    } // If not, it's thrown away
                     draggedFromCanvasInfo = null;
                     canvas.style.cursor = 'default';
                     drawGame();
                 }
-            });
+            }
 
-            canvas.addEventListener('mouseleave', (e) => {
-                if (draggedFromCanvasInfo) {
-                    // If mouse leaves canvas while dragging, treat as thrown away
-                    draggedFromCanvasInfo = null;
-                    canvas.style.cursor = 'default';
-                    drawGame();
-                }
-            });
-
-            canvas.addEventListener('dragover', (e) => {
-                e.preventDefault(); // Necessary to allow dropping
-            });
-
+            // Mouse events
+            canvas.addEventListener('mousedown', (e) => handleCanvasPress(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top));
+            canvas.addEventListener('mousemove', (e) => handleMove(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top));
+            canvas.addEventListener('mouseup', (e) => handleCanvasRelease(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top));
+            canvas.addEventListener('mouseleave', () => handleCanvasRelease(-1, -1)); // Drop outside
+            canvas.addEventListener('dragover', (e) => e.preventDefault());
             canvas.addEventListener('drop', (e) => {
                 e.preventDefault();
-                if (draggingIngredient) {
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
+                handleDrop(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
+            });
 
-                    placedIngredients.push({ ...draggingIngredient, x, y });
-                    draggingIngredient = null;
-                    drawGame();
-                }
+            // Touch events
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                handleCanvasPress(touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top);
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                handleMove(touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top);
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', (e) => {
+                const touch = e.changedTouches[0];
+                handleCanvasRelease(touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top);
             });
 
             // --- Scoring Logic ---
