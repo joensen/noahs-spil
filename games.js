@@ -4,12 +4,6 @@ const games = [
         description: "A fast-paced space shooter where you defend against an onslaught of enemy missiles.",
         folder: "Gunway",
         screenshot: "Gunway/screenshot.png"
-    },
-    {
-        title: "Den Flotte Kagedyst",
-        description: "Decorate a cake against the clock in this sweet and creative game.",
-        folder: "DenFlotteKagedyst",
-        screenshot: "DenFlotteKagedyst/screenshot.png"
     }
 ];
 
