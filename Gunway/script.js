@@ -117,11 +117,11 @@ $(document).ready(function() {
                 createFireworks();
                 const pos = bot.position();
                 bot.hide();
-                createExplosion(pos.left, pos.top);
+                createExplosion(pos.left, pos.top, 'bot-explosion');
             } else {
                 const pos = player.position();
                 player.hide();
-                createExplosion(pos.left, pos.top);
+                createExplosion(pos.left, pos.top, 'player-explosion');
             }
             playSound('explosion-sound');
 
@@ -131,8 +131,9 @@ $(document).ready(function() {
             difficultySelection.show();
         }
 
-        function createExplosion(x, y) {
+        function createExplosion(x, y, explosionClass) {
             const explosion = $('<div class="explosion"></div>');
+            explosion.addClass(explosionClass);
             explosion.css({ left: (x + 10) + 'px', top: (y + 10) + 'px' });
             gameContainer.append(explosion);
 
