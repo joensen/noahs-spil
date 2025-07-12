@@ -3,7 +3,6 @@ $(document).ready(function() {
         const gameContainer = $('#game-container');
         const player = $('#player');
         const bot = $('#bot');
-        const startButton = $('#start-button');
         const buttonsContainer = $('.buttons-container');
         const gameOverMessage = $('#game-over-message');
         const difficultySelection = $('#difficulty-selection');
@@ -59,10 +58,10 @@ $(document).ready(function() {
 
         function startGame() {
             initializeGameState();
+            gameOverMessage.removeClass('win');
 
             buttonsContainer.show();
             $('#move-left-button, #move-right-button').hide();
-            startButton.css('top', '50%').hide(); // Reset button position and hide
             gameOverMessage.hide();
             difficultySelection.hide();
 
@@ -72,8 +71,18 @@ $(document).ready(function() {
             clearInterval(botShootInterval);
             clearInterval(gameLoopInterval);
 
-            botMoveInterval = setInterval(moveBot, 2000);
-            botShootInterval = setInterval(shootBot, 100);
+            let botMoveSpeed = 2000;
+            if (currentDifficulty === 'hard') {
+                botMoveSpeed = 500; // Faster bot movement for hard
+            }
+
+            let botShootSpeed = 100;
+            if (currentDifficulty === 'easy') {
+                botShootSpeed = 400; // Slower bot shooting for easy
+            }
+
+            botMoveInterval = setInterval(moveBot, botMoveSpeed);
+            botShootInterval = setInterval(shootBot, botShootSpeed);
             gameLoopInterval = setInterval(gameLoop, 16); // ~60 FPS
             
             // Start the shooting cycle
@@ -96,11 +105,34 @@ $(document).ready(function() {
             clearInterval(gameLoopInterval);
 
             const message = playerWon ? "You Win!" : "Game Over";
-            gameOverMessage.text(message).fadeIn();
+            gameOverMessage.text(message);
+
+            if (playerWon) {
+                gameOverMessage.addClass('win');
+                createFireworks();
+            }
+
+            gameOverMessage.fadeIn();
             
             buttonsContainer.hide();
-            startButton.text('Restart').css('top', '65%').show(); // Move button down
             difficultySelection.show();
+        }
+
+        function createFireworks() {
+            const fireworksContainer = gameContainer;
+            for (let i = 0; i < 30; i++) {
+                const firework = $('<div class="firework"></div>');
+                const x = Math.random() * gameContainer.width();
+                const y = Math.random() * gameContainer.height();
+                firework.css({
+                    left: x + 'px',
+                    top: y + 'px'
+                });
+                fireworksContainer.append(firework);
+                setTimeout(() => {
+                    firework.remove();
+                }, 1000);
+            }
         }
 
         // --- Player & Bot Actions ---
@@ -108,7 +140,11 @@ $(document).ready(function() {
         function moveBot() {
             if (gameOver) return;
             const playerX = player.position().left;
-            bot.animate({ left: playerX + 'px' }, 1000);
+            let botMoveAnimationSpeed = 1000;
+            if (currentDifficulty === 'hard') {
+                botMoveAnimationSpeed = 500; // Faster bot animation for hard
+            }
+            bot.animate({ left: playerX + 'px' }, botMoveAnimationSpeed);
         }
 
         function shootBot() {
@@ -213,9 +249,6 @@ $(document).ready(function() {
             keys[e.code] = true;
             if (e.code === 'Enter') {
                 e.preventDefault();
-                if (startButton.is(':visible')) {
-                    startButton.trigger('click');
-                }
             }
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -227,23 +260,18 @@ $(document).ready(function() {
             keys[e.code] = false;
         });
 
-        startButton.on('click', startGame);
-
         easyButton.on('click', function() {
             currentDifficulty = 'easy';
-            difficultySelection.hide();
-            startButton.show();
+            startGame();
         });
 
         mediumButton.on('click', function() {
             currentDifficulty = 'medium';
-            difficultySelection.hide();
-            startButton.show();
+            startGame();
         });
 
         hardButton.on('click', function() {
             currentDifficulty = 'hard';
-            difficultySelection.hide();
-            startButton.show();
+            startGame();
         });
     });
