@@ -4,6 +4,12 @@ const games = [
         description: "A fast-paced space shooter where you defend against an onslaught of enemy missiles.",
         folder: "Gunway",
         screenshot: "Gunway/screenshot.png"
+    },
+    {
+        title: "Killing Mobs",
+        description: "A top-down tower defense shooter where you defend a central house against waves of monsters.",
+        folder: "KillingMobs",
+        screenshot: "KillingMobs/screenshot.png"
     }
 ];
 
