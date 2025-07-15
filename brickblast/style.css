@@ -1,0 +1,139 @@
+body {
+    display: flex;
+    flex-direction: column; /* To stack title and game */
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #000020;
+    margin: 0;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+#game-title {
+    font-size: 60px;
+    color: #fff;
+    text-shadow: 0 0 20px #ff00ff, 0 0 30px #00ffff;
+    margin-bottom: 20px;
+}
+
+#game-container {
+    width: 800px;
+    height: 600px;
+    border: 4px solid #fff;
+    border-radius: 10px;
+    position: relative;
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+    box-shadow: 0 0 20px #fff;
+}
+
+#ball {
+    width: 25px;
+    height: 25px;
+    background-color: #ffcc00;
+    border-radius: 50%;
+    position: absolute;
+    top: 290px;
+    left: 390px;
+    box-shadow: 0 0 15px #ff6600, 0 0 5px #ff0000;
+}
+
+.paddle {
+    width: 100px;
+    height: 20px;
+    border-radius: 5px;
+    position: absolute;
+    box-shadow: 0 0 10px #fff;
+}
+
+#player-paddle {
+    bottom: 10px;
+    left: 350px;
+    background-color: #0099ff; /* Blue */
+}
+
+#bot-paddle {
+    top: 10px;
+    left: 350px;
+    background-color: #ff3300; /* Red */
+}
+
+.wall {
+    width: 100px; /* Shorter walls */
+    height: 20px;
+    background-color: #666;
+    position: absolute;
+    border-radius: 5px;
+    box-shadow: 0 0 10px #fff;
+}
+
+#wall1 {
+    top: 200px;
+    left: 150px;
+}
+
+#wall2 {
+    top: 400px;
+    right: 150px;
+}
+
+#ui-container {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 0 0 10px #ff00ff;
+}
+
+#start-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    padding: 20px 40px;
+    cursor: pointer;
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    text-shadow: 0 0 15px #fff;
+    box-shadow: 0 0 20px #ff00ff, 0 0 20px #00ffff;
+}
+
+#game-over {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 100px;
+    color: #ff0000;
+    text-align: center;
+    text-shadow: 0 0 20px #fff;
+}
+
+#restart-button {
+    display: block;
+    font-size: 24px;
+    margin: 20px auto 0;
+    padding: 10px 20px;
+    cursor: pointer;
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    text-shadow: 0 0 10px #fff;
+    box-shadow: 0 0 15px #ff00ff, 0 0 15px #00ffff;
+}
+
+#level-up {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 80px;
+    color: #fff;
+    text-shadow: 0 0 20px #00ff00;
+}

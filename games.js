@@ -10,6 +10,12 @@ const games = [
         description: "A top-down tower defense shooter where you defend a central house against waves of monsters.",
         folder: "KillingMobs",
         screenshot: "KillingMobs/screenshot.png"
+    },
+    {
+        title: "BrickBlast",
+        description: "A Pong-style game where you control a paddle to hit a ball against a bot.",
+        folder: "brickblast",
+        screenshot: "brickblast/screenshot.png"
     }
 ];
 
