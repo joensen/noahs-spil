@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Runner - Noah's Arcade</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <div id="ui-overlay">
+        <div id="hud">
+            <div id="timer">Time: <span id="time-value">60</span>s</div>
+            <div id="score">Stars: <span id="score-value">0</span></div>
+            <div id="stars">Collected: <span id="stars-value">0</span>/5</div>
+        </div>
+        <canvas id="minimap"></canvas>
+    </div>
+
+    <div id="menu-screen" class="overlay-screen">
+        <h1>Star Runner</h1>
+        <p>Navigate the maze, collect 5 stars, and reach the exit!</p>
+        <div class="instructions">
+            <p><strong>Controls:</strong></p>
+            <p>WASD - Move & Strafe</p>
+            <p>Mouse - Look Around | ESC - Pause</p>
+        </div>
+        <div class="difficulty-selection">
+            <p><strong>Select Difficulty:</strong></p>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn" data-difficulty="easy">Easy (5x5)</button>
+                <button class="difficulty-btn active" data-difficulty="medium">Medium (10x10)</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard (15x15)</button>
+            </div>
+        </div>
+        <p class="hint">Faster completion = higher score!</p>
+        <button id="start-button">Start Game</button>
+    </div>
+
+    <div id="game-over-screen" class="overlay-screen" style="display:none;">
+        <h1 id="result-message">Time's Up!</h1>
+        <div id="score-breakdown">
+            <p>Stars Collected: <span id="final-stars">0</span>/5 × 1000 = <span id="star-points">0</span></p>
+            <p>Time Bonus: <span id="time-left">0</span>s × 100 = <span id="time-points">0</span></p>
+            <p class="total-score">Total Score: <span id="final-score">0</span></p>
+        </div>
+        <button id="restart-button">Play Again</button>
+    </div>
+
+    <div id="crosshair">+</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

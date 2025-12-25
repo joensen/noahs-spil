@@ -28,6 +28,12 @@ const games = [
         description: "Red mennesker fra brændende bygninger! Styr brandmanden med piletasterne og red alle i tide.",
         folder: "Firewall",
         screenshot: "Firewall/screenshot.png"
+    },
+    {
+        title: "Star Runner",
+        description: "Navigate a 3D maze in first-person view. Collect stars and escape! Bonus points for speed!",
+        folder: "StarRunner",
+        screenshot: "StarRunner/screenshot.png"
     }
 ];
 
