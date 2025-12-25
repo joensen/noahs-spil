@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kryds og Bolle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Kryds og Bolle</h1>
+
+        <div class="game-info">
+            <div class="player-info">
+                <span class="player-tag">Du: X</span>
+                <span class="vs">vs</span>
+                <span class="player-tag bot">Computer: O</span>
+            </div>
+            <div class="status" id="status">Din tur</div>
+        </div>
+
+        <div class="game-board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <button class="restart-btn" id="restartBtn">Nyt Spil</button>
+
+        <div class="controls">
+            <a href="../index.html" class="back-btn">← Tilbage til Spil</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

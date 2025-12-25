@@ -16,6 +16,18 @@ const games = [
         description: "A Pong-style game where you control a paddle to hit a ball against a bot.",
         folder: "brickblast",
         screenshot: "brickblast/screenshot.png"
+    },
+    {
+        title: "Kryds og Bolle",
+        description: "Play tic-tac-toe against a smart AI opponent. Can you beat the computer?",
+        folder: "KrydsOgBolle",
+        screenshot: "KrydsOgBolle/screenshot.png"
+    },
+    {
+        title: "Firewall",
+        description: "Red mennesker fra brændende bygninger! Styr brandmanden med piletasterne og red alle i tide.",
+        folder: "Firewall",
+        screenshot: "Firewall/screenshot.png"
     }
 ];
 
