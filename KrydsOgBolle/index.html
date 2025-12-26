@@ -10,16 +10,27 @@
     <div class="container">
         <h1>Kryds og Bolle</h1>
 
-        <div class="game-info">
+        <div class="mode-selector" id="modeSelector">
+            <h2>Vælg spiltype</h2>
+            <button class="mode-btn" id="classicMode">Klassisk</button>
+            <button class="mode-btn" id="threePieceMode">3 Brikker</button>
+            <p class="mode-description" id="modeDescription">Klassisk: Placer brikker indtil én vinder eller uafgjort.<br>3 Brikker: Hver spiller har kun 3 brikker. Efter placering kan du flytte dem.</p>
+        </div>
+
+        <div class="game-info" id="gameInfo" style="display: none;">
             <div class="player-info">
                 <span class="player-tag">Du: X</span>
                 <span class="vs">vs</span>
                 <span class="player-tag bot">Computer: O</span>
             </div>
+            <div class="pieces-info" id="piecesInfo" style="display: none;">
+                <span class="pieces-count">Dine brikker: <span id="humanPieces">3</span></span>
+                <span class="pieces-count">Computer: <span id="botPieces">3</span></span>
+            </div>
             <div class="status" id="status">Din tur</div>
         </div>
 
-        <div class="game-board" id="board">
+        <div class="game-board" id="board" style="display: none;">
             <div class="cell" data-index="0"></div>
             <div class="cell" data-index="1"></div>
             <div class="cell" data-index="2"></div>
@@ -31,7 +42,7 @@
             <div class="cell" data-index="8"></div>
         </div>
 
-        <button class="restart-btn" id="restartBtn">Nyt Spil</button>
+        <button class="restart-btn" id="restartBtn" style="display: none;">Nyt Spil</button>
 
         <div class="controls">
             <a href="../index.html" class="back-btn">← Tilbage til Spil</a>
