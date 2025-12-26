@@ -34,6 +34,12 @@ const games = [
         description: "Navigate a 3D maze in first-person view. Collect stars and escape! Bonus points for speed!",
         folder: "StarRunner",
         screenshot: "StarRunner/screenshot.png"
+    },
+    {
+        title: "Police Chase",
+        description: "Kør politibil i 3D og jag forbrydere gennem byen! Fang dem alle!",
+        folder: "PoliceChase",
+        screenshot: "PoliceChase/screenshot.png"
     }
 ];
 

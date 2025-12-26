@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Chase - 3D Politijagt</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div id="speed">Fanget: <span id="speed-value">0</span></div>
+            <div id="score">Score: <span id="score-value">0</span></div>
+            <div id="distance">Tid: <span id="distance-value">30</span> sek</div>
+        </div>
+        <div id="start-screen">
+            <h1>Police Chase</h1>
+            <p>Fang tyven så mange gange som muligt på 30 sekunder!</p>
+            <p>Undgå de andre biler - de koster 3 sekunders straf!</p>
+            <p class="controls">Kontroller:<br>
+            ↑ / W - Op<br>
+            ↓ / S - Ned<br>
+            ← / A - Venstre<br>
+            → / D - Højre</p>
+            <button id="start-btn">START JAGTEN!</button>
+        </div>
+        <div id="game-over" style="display: none;">
+            <h1>SPIL SLUT!</h1>
+            <p>Din score: <span id="final-score">0</span></p>
+            <p>Tyve fanget: <span id="final-distance">0</span></p>
+            <button id="restart-btn">PRØV IGEN</button>
+        </div>
+    </div>
+    <a href="../" class="back-link">← Tilbage til spil</a>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -12,20 +12,22 @@ const CONFIG = {
     WALL_HEIGHT: 2,
     WALL_THICKNESS: 0.5,
     MOVE_SPEED: 10,
-    JUMP_VELOCITY: 5,
+    JUMP_VELOCITY: 3.5,  // Reduced to prevent jumping over walls
     GRAVITY: 9.8,
     PLAYER_RADIUS: 0.5,  // Increased from 0.3 to prevent getting stuck
     PLAYER_HEIGHT: 1.6,
     POINTS_PER_STAR: 1000,
-    TIME_BONUS_MULTIPLIER: 100,
-    INITIAL_TIME: 60
+    TIME_BONUS_MULTIPLIER: 0.1,  // Per millisecond (100 per second = 0.1 per ms)
+    INITIAL_TIME: 60,
+    LAVA_PENALTY: 300,
+    LAVA_HOLE_COUNT: 5
 };
 
 // Difficulty settings
 const DIFFICULTY = {
-    easy: { mazeSize: 5, name: 'Easy' },
-    medium: { mazeSize: 10, name: 'Medium' },
-    hard: { mazeSize: 15, name: 'Hard' }
+    easy: { mazeSize: 8, name: 'Easy' },
+    medium: { mazeSize: 12, name: 'Medium' },
+    hard: { mazeSize: 16, name: 'Hard' }
 };
 
 let currentDifficulty = 'medium';
@@ -44,6 +46,12 @@ let scene, camera, renderer;
 let maze, wallMeshes = [];
 let stars = [];
 let exitPortal;
+let lavaHoles = [];
+let lavaHolePositions = [];
+let shownStarIndex = 0; // Which star to show on minimap
+let ouchActive = false;
+let ouchTimer = 0;
+let isInLavaHole = false; // Track if player is currently in a lava hole
 
 // Pointer Lock Control Variables
 let isPointerLocked = false;
@@ -293,7 +301,9 @@ function init() {
 
     restartButton.addEventListener('click', () => {
         resetGame();
-        document.body.requestPointerLock();
+        currentState = GameState.MENU;
+        gameOverScreen.style.display = 'none';
+        menuScreen.style.display = 'flex';
     });
 
     // Difficulty button listeners
@@ -331,27 +341,54 @@ function startGame() {
     maze.generate();
     wallMeshes = maze.toThreeJS(scene);
 
-    // Create floor tiles
+    // Place player at entrance
+    const entrancePos = maze.cellToWorldPosition(maze.entrance);
+    camera.position.set(entrancePos.x, CONFIG.PLAYER_HEIGHT, entrancePos.z);
+
+    // Place stars first (before lava holes to exclude their positions)
+    placeStars();
+
+    // Place exit portal
+    placeExitPortal();
+
+    // Place lava holes (this also sets lavaHolePositions)
+    placeLavaHoles();
+
+    // Create floor tiles - skip tiles where lava holes are
     const tileSize = CONFIG.CELL_SIZE / 2;
     const tilesX = currentMazeSize * 2;
     const tilesZ = currentMazeSize * 2;
+    const holeRadius = 1.0; // Match the lava hole radius
 
     for (let x = 0; x < tilesX; x++) {
         for (let z = 0; z < tilesZ; z++) {
-            const isWhite = (x + z) % 2 === 0;
-            const tileGeometry = new THREE.PlaneGeometry(tileSize, tileSize);
-            const tileMaterial = new THREE.MeshLambertMaterial({
-                color: isWhite ? 0xffffff : 0x000000
-            });
-            const tile = new THREE.Mesh(tileGeometry, tileMaterial);
-            tile.rotation.x = -Math.PI / 2;
-            tile.position.set(
-                x * tileSize + tileSize / 2,
-                0,
-                z * tileSize + tileSize / 2
-            );
-            scene.add(tile);
-            floorTiles.push(tile);
+            const tileX = x * tileSize + tileSize / 2;
+            const tileZ = z * tileSize + tileSize / 2;
+
+            // Check if this tile overlaps with any lava hole
+            let isOverLavaHole = false;
+            for (const hole of lavaHolePositions) {
+                const dx = tileX - hole.x;
+                const dz = tileZ - hole.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                if (distance < holeRadius + tileSize / 2) {
+                    isOverLavaHole = true;
+                    break;
+                }
+            }
+
+            if (!isOverLavaHole) {
+                const isWhite = (x + z) % 2 === 0;
+                const tileGeometry = new THREE.PlaneGeometry(tileSize, tileSize);
+                const tileMaterial = new THREE.MeshLambertMaterial({
+                    color: isWhite ? 0xffffff : 0x000000
+                });
+                const tile = new THREE.Mesh(tileGeometry, tileMaterial);
+                tile.rotation.x = -Math.PI / 2;
+                tile.position.set(tileX, 0, tileZ);
+                scene.add(tile);
+                floorTiles.push(tile);
+            }
         }
     }
 
@@ -363,21 +400,41 @@ function startGame() {
     ceilingMesh.position.set(currentMazeSize * CONFIG.CELL_SIZE / 2, CONFIG.WALL_HEIGHT, currentMazeSize * CONFIG.CELL_SIZE / 2);
     scene.add(ceilingMesh);
 
-    // Place player at entrance
-    const entrancePos = maze.cellToWorldPosition(maze.entrance);
-    camera.position.set(entrancePos.x, CONFIG.PLAYER_HEIGHT, entrancePos.z);
-
-    // Place stars
-    placeStars();
-
-    // Place exit portal
-    placeExitPortal();
-
     // Reset game state
     timeRemaining = CONFIG.INITIAL_TIME;
     starsCollected = 0;
     starScore = 0;
+    shownStarIndex = Math.floor(Math.random() * 5); // Random star to show on minimap
     updateHUD();
+}
+
+function createPentagramGeometry(outerRadius, innerRadius) {
+    const shape = new THREE.Shape();
+    const points = 5;
+
+    for (let i = 0; i < points * 2; i++) {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const angle = (i * Math.PI) / points - Math.PI / 2;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+
+        if (i === 0) {
+            shape.moveTo(x, y);
+        } else {
+            shape.lineTo(x, y);
+        }
+    }
+    shape.closePath();
+
+    const extrudeSettings = {
+        depth: 0.1,
+        bevelEnabled: true,
+        bevelThickness: 0.05,
+        bevelSize: 0.05,
+        bevelSegments: 2
+    };
+
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
 }
 
 function placeStars() {
@@ -385,8 +442,8 @@ function placeStars() {
     stars.forEach(star => scene.remove(star));
     stars = [];
 
-    // Create diamond/octahedron geometry
-    const starGeometry = new THREE.OctahedronGeometry(0.4, 0);
+    // Create pentagram geometry
+    const starGeometry = createPentagramGeometry(0.5, 0.2);
     const starMaterial = new THREE.MeshStandardMaterial({
         color: 0xffff00,
         emissive: 0xffff00,
@@ -403,6 +460,7 @@ function placeStars() {
 
         const pos = maze.cellToWorldPosition(cell);
         const star = new THREE.Mesh(starGeometry, starMaterial);
+        star.rotation.x = Math.PI / 2; // Make it face up/horizontal
         star.position.set(pos.x, 1.0, pos.z);
         scene.add(star);
         stars.push(star);
@@ -414,17 +472,203 @@ function placeExitPortal() {
         scene.remove(exitPortal);
     }
 
-    const exitGeometry = new THREE.BoxGeometry(1.5, 2, 0.2);
-    const exitMaterial = new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
-        emissive: 0x00ff00,
-        emissiveIntensity: 1.0
+    // Create a treasure chest group
+    exitPortal = new THREE.Group();
+
+    // Chest body (brown box)
+    const chestBodyGeometry = new THREE.BoxGeometry(1.2, 0.8, 0.8);
+    const chestBodyMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8B4513, // Saddle brown
+        roughness: 0.7
+    });
+    const chestBody = new THREE.Mesh(chestBodyGeometry, chestBodyMaterial);
+    chestBody.position.y = 0.4;
+    exitPortal.add(chestBody);
+
+    // Chest lid (slightly curved top)
+    const chestLidGeometry = new THREE.BoxGeometry(1.3, 0.3, 0.9);
+    const chestLidMaterial = new THREE.MeshStandardMaterial({
+        color: 0x654321, // Dark brown
+        roughness: 0.6
+    });
+    const chestLid = new THREE.Mesh(chestLidGeometry, chestLidMaterial);
+    chestLid.position.y = 0.95;
+    exitPortal.add(chestLid);
+
+    // Gold trim on chest
+    const trimGeometry = new THREE.BoxGeometry(1.35, 0.1, 0.95);
+    const trimMaterial = new THREE.MeshStandardMaterial({
+        color: 0xFFD700, // Gold
+        emissive: 0xFFD700,
+        emissiveIntensity: 0.3,
+        metalness: 0.8,
+        roughness: 0.3
+    });
+    const trim = new THREE.Mesh(trimGeometry, trimMaterial);
+    trim.position.y = 0.8;
+    exitPortal.add(trim);
+
+    // Gold lock
+    const lockGeometry = new THREE.BoxGeometry(0.2, 0.25, 0.15);
+    const lockMaterial = new THREE.MeshStandardMaterial({
+        color: 0xFFD700,
+        emissive: 0xFFD700,
+        emissiveIntensity: 0.5,
+        metalness: 0.9,
+        roughness: 0.2
+    });
+    const lock = new THREE.Mesh(lockGeometry, lockMaterial);
+    lock.position.set(0, 0.6, 0.45);
+    exitPortal.add(lock);
+
+    // Add a glowing effect around the chest
+    const glowGeometry = new THREE.RingGeometry(0.8, 1.2, 32);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xFFD700,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.3
+    });
+    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.y = 0.01;
+    exitPortal.add(glow);
+
+    const exitPos = maze.cellToWorldPosition(maze.exit);
+    exitPortal.position.set(exitPos.x, 0, exitPos.z);
+    scene.add(exitPortal);
+}
+
+function placeLavaHoles() {
+    // Clear existing lava holes
+    lavaHoles.forEach(hole => scene.remove(hole));
+    lavaHoles = [];
+    lavaHolePositions = [];
+
+    // Get cells to exclude (entrance, exit, and star positions)
+    const exclude = [maze.entrance, maze.exit];
+    stars.forEach(star => {
+        const cellX = Math.floor(star.position.x / CONFIG.CELL_SIZE);
+        const cellZ = Math.floor(star.position.z / CONFIG.CELL_SIZE);
+        exclude.push({ x: cellX, y: cellZ });
     });
 
-    exitPortal = new THREE.Mesh(exitGeometry, exitMaterial);
-    const exitPos = maze.cellToWorldPosition(maze.exit);
-    exitPortal.position.set(exitPos.x, 1, exitPos.z);
-    scene.add(exitPortal);
+    // Create lava material
+    const lavaMaterial = new THREE.MeshStandardMaterial({
+        color: 0xff4500, // Orange-red
+        emissive: 0xff2200,
+        emissiveIntensity: 0.8
+    });
+
+    // Dark material for pit walls
+    const pitWallMaterial = new THREE.MeshLambertMaterial({
+        color: 0x333333
+    });
+
+    const holeDepth = 1.5; // How deep the hole is
+    const holeSize = 2.0; // 2 tiles wide
+
+    for (let i = 0; i < CONFIG.LAVA_HOLE_COUNT; i++) {
+        const cell = maze.getRandomEmptyCell(exclude);
+        exclude.push(cell);
+
+        const pos = maze.cellToWorldPosition(cell);
+
+        // Create a group for the lava pit
+        const pitGroup = new THREE.Group();
+
+        // Create the lava at the bottom of the pit
+        const lavaGeometry = new THREE.PlaneGeometry(holeSize, holeSize);
+        const lava = new THREE.Mesh(lavaGeometry, lavaMaterial);
+        lava.rotation.x = -Math.PI / 2;
+        lava.position.y = -holeDepth + 0.05;
+        pitGroup.add(lava);
+
+        // Create pit walls (4 sides)
+        const wallGeometry = new THREE.PlaneGeometry(holeSize, holeDepth);
+
+        // North wall
+        const northWall = new THREE.Mesh(wallGeometry, pitWallMaterial);
+        northWall.position.set(0, -holeDepth / 2, -holeSize / 2);
+        pitGroup.add(northWall);
+
+        // South wall
+        const southWall = new THREE.Mesh(wallGeometry, pitWallMaterial);
+        southWall.rotation.y = Math.PI;
+        southWall.position.set(0, -holeDepth / 2, holeSize / 2);
+        pitGroup.add(southWall);
+
+        // East wall
+        const eastWall = new THREE.Mesh(wallGeometry, pitWallMaterial);
+        eastWall.rotation.y = -Math.PI / 2;
+        eastWall.position.set(holeSize / 2, -holeDepth / 2, 0);
+        pitGroup.add(eastWall);
+
+        // West wall
+        const westWall = new THREE.Mesh(wallGeometry, pitWallMaterial);
+        westWall.rotation.y = Math.PI / 2;
+        westWall.position.set(-holeSize / 2, -holeDepth / 2, 0);
+        pitGroup.add(westWall);
+
+        pitGroup.position.set(pos.x, 0, pos.z);
+        scene.add(pitGroup);
+        lavaHoles.push(pitGroup);
+        lavaHolePositions.push({ x: pos.x, z: pos.z, radius: holeSize / 2, depth: holeDepth });
+    }
+}
+
+function checkLavaHoles() {
+    const playerX = camera.position.x;
+    const playerZ = camera.position.z;
+    const playerY = camera.position.y;
+
+    for (let i = 0; i < lavaHolePositions.length; i++) {
+        const hole = lavaHolePositions[i];
+        const dx = playerX - hole.x;
+        const dz = playerZ - hole.z;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+
+        // Check if player is over a hole
+        if (distance < hole.radius) {
+            // Player is in the hole area - allow falling
+            isInLavaHole = true;
+
+            // Check if player hit the lava at the bottom
+            const lavaHeight = -hole.depth + CONFIG.PLAYER_HEIGHT;
+            if (playerY <= lavaHeight + 0.1) {
+                // Player hit lava! Show OUCH and deduct points
+                if (!ouchActive) {
+                    starScore = Math.max(0, starScore - CONFIG.LAVA_PENALTY);
+                    showOuchOverlay();
+                }
+
+                // Keep player at lava level (they need to jump out)
+                camera.position.y = lavaHeight;
+                velocity.y = 0;
+                movement.canJump = true; // Allow jumping out of the hole
+            }
+            return true;
+        }
+    }
+
+    isInLavaHole = false;
+    return false;
+}
+
+function showOuchOverlay() {
+    ouchActive = true;
+    ouchTimer = 1.0; // 1 second
+    document.getElementById('ouch-overlay').classList.add('active');
+}
+
+function updateOuchOverlay(delta) {
+    if (ouchActive) {
+        ouchTimer -= delta;
+        if (ouchTimer <= 0) {
+            ouchActive = false;
+            document.getElementById('ouch-overlay').classList.remove('active');
+        }
+    }
 }
 
 function resetGame() {
@@ -440,6 +684,11 @@ function resetGame() {
     if (exitPortal) {
         scene.remove(exitPortal);
     }
+
+    // Clear lava holes
+    lavaHoles.forEach(hole => scene.remove(hole));
+    lavaHoles = [];
+    lavaHolePositions = [];
 
     // Clear floor tiles
     floorTiles.forEach(tile => scene.remove(tile));
@@ -462,15 +711,16 @@ function endGame(won) {
     minimapCanvas.classList.remove('active');
     document.exitPointerLock();
 
-    // Calculate final score
-    timeBonus = Math.floor(timeRemaining) * CONFIG.TIME_BONUS_MULTIPLIER;
+    // Calculate final score (time bonus in milliseconds)
+    const timeInMs = timeRemaining * 1000;
+    timeBonus = Math.floor(timeInMs * CONFIG.TIME_BONUS_MULTIPLIER);
     totalScore = starScore + timeBonus;
 
     // Update game over screen
     document.getElementById('result-message').textContent = won ? 'Victory!' : "Time's Up!";
     document.getElementById('final-stars').textContent = starsCollected;
     document.getElementById('star-points').textContent = starScore;
-    document.getElementById('time-left').textContent = Math.floor(timeRemaining);
+    document.getElementById('time-left').textContent = (timeRemaining * 1000).toFixed(0) + 'ms';
     document.getElementById('time-points').textContent = timeBonus;
     document.getElementById('final-score').textContent = totalScore;
 
@@ -506,28 +756,51 @@ function updatePlayerMovement(delta) {
         moveVector.add(right.multiplyScalar(direction.x * CONFIG.MOVE_SPEED * delta));
     }
 
-    // Check collision before moving
-    const newPosition = new THREE.Vector3(
+    // Sliding collision - try X and Z separately to prevent getting stuck in corners
+    const newPosX = new THREE.Vector3(
+        camera.position.x + moveVector.x,
+        camera.position.y,
+        camera.position.z
+    );
+
+    const newPosZ = new THREE.Vector3(
+        camera.position.x,
+        camera.position.y,
+        camera.position.z + moveVector.z
+    );
+
+    const newPosBoth = new THREE.Vector3(
         camera.position.x + moveVector.x,
         camera.position.y,
         camera.position.z + moveVector.z
     );
 
-    if (!checkCollision(newPosition)) {
+    // Try moving in both directions first
+    if (!checkCollision(newPosBoth)) {
         camera.position.x += moveVector.x;
         camera.position.z += moveVector.z;
+    } else {
+        // If blocked, try sliding along each axis separately
+        if (!checkCollision(newPosX)) {
+            camera.position.x += moveVector.x;
+        }
+        if (!checkCollision(newPosZ)) {
+            camera.position.z += moveVector.z;
+        }
     }
 
     // Apply vertical velocity
     camera.position.y += velocity.y * delta;
 
-    // Ground collision
-    if (camera.position.y <= CONFIG.PLAYER_HEIGHT) {
-        camera.position.y = CONFIG.PLAYER_HEIGHT;
-        velocity.y = 0;
-        movement.canJump = true;
-    } else {
-        movement.canJump = false;
+    // Ground collision - but allow falling into holes
+    if (!isInLavaHole) {
+        if (camera.position.y <= CONFIG.PLAYER_HEIGHT) {
+            camera.position.y = CONFIG.PLAYER_HEIGHT;
+            velocity.y = 0;
+            movement.canJump = true;
+        } else {
+            movement.canJump = false;
+        }
     }
 }
 
@@ -578,6 +851,11 @@ function checkStarCollection() {
             // Add 10 seconds to the timer
             timeRemaining += 10;
 
+            // Pick a new random star to show on minimap
+            if (stars.length > 0) {
+                shownStarIndex = Math.floor(Math.random() * stars.length);
+            }
+
             updateHUD();
         }
     }
@@ -587,7 +865,10 @@ function checkExitReached() {
     if (!exitPortal) return;
 
     const playerPos = camera.position.clone();
-    const distance = playerPos.distanceTo(exitPortal.position);
+    playerPos.y = 0; // Compare at ground level
+    const exitPos = exitPortal.position.clone();
+    exitPos.y = 0;
+    const distance = playerPos.distanceTo(exitPos);
 
     if (distance < 2) {
         if (starsCollected === 5) {
@@ -598,29 +879,50 @@ function checkExitReached() {
 
 function updateHUD() {
     document.getElementById('time-value').textContent = Math.ceil(timeRemaining);
-    document.getElementById('score-value').textContent = starScore;
-    document.getElementById('stars-value').textContent = starsCollected;
+
+    // Calculate current total score: stars collected + current time bonus (in milliseconds)
+    const timeInMs = timeRemaining * 1000;
+    const currentTimeBonus = Math.floor(timeInMs * CONFIG.TIME_BONUS_MULTIPLIER);
+    const currentTotalScore = starScore + currentTimeBonus;
+    document.getElementById('score-value').textContent = currentTotalScore;
+
+    // Show star icons - filled for collected, empty for remaining
+    let starsHTML = '';
+    for (let i = 0; i < 5; i++) {
+        if (i < starsCollected) {
+            starsHTML += '<span class="star-icon collected">&#9733;</span>'; // Filled star
+        } else {
+            starsHTML += '<span class="star-icon">&#9734;</span>'; // Empty star
+        }
+    }
+    document.getElementById('stars-icons').innerHTML = starsHTML;
 }
 
 function drawMinimap() {
     if (!maze) return;
 
-    const canvasSize = 300;
-    const cellSize = canvasSize / maze.width;
+    // Adjust canvas to fit the entire map
+    const canvasWidth = minimapCanvas.width;
+    const canvasHeight = minimapCanvas.height;
+    const cellSize = Math.min(canvasWidth, canvasHeight) / Math.max(maze.width, maze.height);
+
+    // Calculate offset to center the map
+    const offsetX = (canvasWidth - maze.width * cellSize) / 2;
+    const offsetY = (canvasHeight - maze.height * cellSize) / 2;
 
     // Clear canvas
     minimapCtx.fillStyle = '#000000';
-    minimapCtx.fillRect(0, 0, canvasSize, canvasSize);
+    minimapCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 
     // Draw maze walls
     minimapCtx.strokeStyle = '#ffffff';
-    minimapCtx.lineWidth = 2;
+    minimapCtx.lineWidth = 1;
 
     for (let y = 0; y < maze.height; y++) {
         for (let x = 0; x < maze.width; x++) {
             const cell = maze.cells[y][x];
-            const drawX = x * cellSize;
-            const drawY = y * cellSize;
+            const drawX = offsetX + x * cellSize;
+            const drawY = offsetY + y * cellSize;
 
             minimapCtx.beginPath();
 
@@ -646,27 +948,29 @@ function drawMinimap() {
         }
     }
 
-    // Draw exit portal
+    // Draw exit (chest) - draw as a small rectangle
     if (exitPortal) {
-        const exitCellX = maze.exit.x * cellSize + cellSize / 2;
-        const exitCellY = maze.exit.y * cellSize + cellSize / 2;
-        minimapCtx.fillStyle = '#00ff00';
-        minimapCtx.beginPath();
-        minimapCtx.arc(exitCellX, exitCellY, cellSize / 3, 0, Math.PI * 2);
-        minimapCtx.fill();
+        const exitCellX = offsetX + maze.exit.x * cellSize + cellSize / 2;
+        const exitCellY = offsetY + maze.exit.y * cellSize + cellSize / 2;
+        minimapCtx.fillStyle = '#8B4513'; // Brown for chest
+        const chestSize = Math.max(cellSize / 3, 4);
+        minimapCtx.fillRect(exitCellX - chestSize / 2, exitCellY - chestSize / 2, chestSize, chestSize);
+        minimapCtx.strokeStyle = '#FFD700'; // Gold border
+        minimapCtx.lineWidth = 1;
+        minimapCtx.strokeRect(exitCellX - chestSize / 2, exitCellY - chestSize / 2, chestSize, chestSize);
     }
 
     // Draw player position
-    const playerCellX = (camera.position.x / CONFIG.CELL_SIZE) * cellSize;
-    const playerCellZ = (camera.position.z / CONFIG.CELL_SIZE) * cellSize;
+    const playerCellX = offsetX + (camera.position.x / CONFIG.CELL_SIZE) * cellSize;
+    const playerCellZ = offsetY + (camera.position.z / CONFIG.CELL_SIZE) * cellSize;
 
     minimapCtx.fillStyle = '#ff0000';
     minimapCtx.beginPath();
-    minimapCtx.arc(playerCellX, playerCellZ, cellSize / 4, 0, Math.PI * 2);
+    minimapCtx.arc(playerCellX, playerCellZ, Math.max(cellSize / 4, 4), 0, Math.PI * 2);
     minimapCtx.fill();
 
     // Draw player direction indicator
-    const directionLength = cellSize / 2;
+    const directionLength = Math.max(cellSize / 2, 8);
     const angle = Math.atan2(
         Math.sin(euler.y),
         Math.cos(euler.y)
@@ -730,7 +1034,12 @@ function onKeyDown(event) {
         case 'KeyD':
             movement.right = true;
             break;
-        // Space bar disabled - no jumping
+        case 'Space':
+            if (movement.canJump) {
+                velocity.y = CONFIG.JUMP_VELOCITY;
+                movement.canJump = false;
+            }
+            break;
     }
 }
 
@@ -780,6 +1089,12 @@ function animate(currentTime) {
 
         // Update player movement
         updatePlayerMovement(delta);
+
+        // Check lava holes
+        checkLavaHoles();
+
+        // Update ouch overlay
+        updateOuchOverlay(delta);
 
         // Check star collection
         checkStarCollection();
