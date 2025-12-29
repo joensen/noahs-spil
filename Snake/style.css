@@ -225,12 +225,21 @@ textarea[readonly] {
     text-align: center;
 }
 
-#highscores {
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     width: 200px;
+    height: 625px;
+}
+
+#highscores {
     padding: 15px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
     text-align: left;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 #highscores h3 {
@@ -260,4 +269,59 @@ textarea[readonly] {
 #highscore-list .score-time {
     float: right;
     color: #ffcc00;
+}
+
+/* D-pad styles */
+#dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(2, 50px);
+    gap: 5px;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.dpad-btn {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(0, 217, 255, 0.2);
+    color: #00d9ff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.dpad-btn:active {
+    background: rgba(0, 217, 255, 0.5);
+    transform: scale(0.95);
+}
+
+.dpad-up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.dpad-left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.dpad-right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.dpad-down {
+    grid-column: 2;
+    grid-row: 2;
 }

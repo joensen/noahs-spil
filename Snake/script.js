@@ -377,31 +377,64 @@ function draw() {
 }
 
 // Input handling
-document.addEventListener('keydown', (e) => {
+function handleDirection(dir) {
     if (!gameRunning) return;
 
+    switch (dir) {
+        case 'up':
+            if (myDirection.y !== 1) nextDirection = { x: 0, y: -1 };
+            break;
+        case 'down':
+            if (myDirection.y !== -1) nextDirection = { x: 0, y: 1 };
+            break;
+        case 'left':
+            if (myDirection.x !== 1) nextDirection = { x: -1, y: 0 };
+            break;
+        case 'right':
+            if (myDirection.x !== -1) nextDirection = { x: 1, y: 0 };
+            break;
+    }
+}
+
+document.addEventListener('keydown', (e) => {
     switch (e.key) {
         case 'ArrowUp':
         case 'w':
         case 'W':
-            if (myDirection.y !== 1) nextDirection = { x: 0, y: -1 };
+            handleDirection('up');
             break;
         case 'ArrowDown':
         case 's':
         case 'S':
-            if (myDirection.y !== -1) nextDirection = { x: 0, y: 1 };
+            handleDirection('down');
             break;
         case 'ArrowLeft':
         case 'a':
         case 'A':
-            if (myDirection.x !== 1) nextDirection = { x: -1, y: 0 };
+            handleDirection('left');
             break;
         case 'ArrowRight':
         case 'd':
         case 'D':
-            if (myDirection.x !== -1) nextDirection = { x: 1, y: 0 };
+            handleDirection('right');
             break;
     }
+});
+
+// D-pad touch/click handling
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+    const dir = btn.dataset.dir;
+
+    // Handle both touch and click
+    btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleDirection(dir);
+    });
+
+    btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        handleDirection(dir);
+    });
 });
 
 // WebRTC Connection Setup

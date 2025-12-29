@@ -64,11 +64,19 @@
             <div class="game-layout">
                 <div class="game-area">
                     <canvas id="game-canvas" width="625" height="625"></canvas>
-                    <div id="controls-hint">Controls: Arrow keys or WASD</div>
+                    <div id="controls-hint">Controls: Arrow keys, WASD, or D-pad</div>
                 </div>
-                <div id="highscores">
-                    <h3>High Scores</h3>
-                    <ol id="highscore-list"></ol>
+                <div class="sidebar">
+                    <div id="highscores">
+                        <h3>High Scores</h3>
+                        <ol id="highscore-list"></ol>
+                    </div>
+                    <div id="dpad">
+                        <button class="dpad-btn dpad-up" data-dir="up">▲</button>
+                        <button class="dpad-btn dpad-left" data-dir="left">◀</button>
+                        <button class="dpad-btn dpad-right" data-dir="right">▶</button>
+                        <button class="dpad-btn dpad-down" data-dir="down">▼</button>
+                    </div>
                 </div>
             </div>
         </div>
