@@ -4,6 +4,7 @@
 let peerConnection = null;
 let dataChannel = null;
 let isHost = false;
+let isPlayingBot = false;
 let playerName = '';
 let opponentName = 'Opponent';
 
@@ -57,6 +58,10 @@ let opponentSnake = [];
 let myDirection = { x: 0, y: -1 };
 let nextDirection = { x: 0, y: -1 };
 let highscores = JSON.parse(localStorage.getItem('snakeHighscores') || '[]');
+
+// Bot state
+let botDirection = { x: 0, y: 1 };
+let botNextDirection = { x: 0, y: 1 };
 
 // Colors
 const MY_COLOR = '#00ff64';
@@ -200,7 +205,15 @@ function resetGame() {
         myDirection = { x: 0, y: 1 }; // Facing down
     }
     nextDirection = { ...myDirection };
-    opponentSnake = [];
+
+    // Initialize bot snake if playing against bot
+    if (isPlayingBot) {
+        opponentSnake = [{ x: 20, y: 10 }, { x: 20, y: 9 }, { x: 20, y: 8 }];
+        botDirection = { x: 0, y: 1 }; // Facing down
+        botNextDirection = { x: 0, y: 1 };
+    } else {
+        opponentSnake = [];
+    }
 
     gameStartTime = Date.now();
     gameRunning = true;
@@ -260,25 +273,150 @@ function update() {
         mySnake.pop();
     }
 
-    // Send position to opponent
-    sendMessage({ type: 'snake', snake: mySnake });
+    // Send position to opponent (or update bot)
+    if (isPlayingBot) {
+        updateBot();
+    } else {
+        sendMessage({ type: 'snake', snake: mySnake });
+    }
+}
+
+// Bot AI
+function updateBot() {
+    // Apply bot's direction change
+    botDirection = { ...botNextDirection };
+
+    // Calculate new head position with wrapping
+    const head = opponentSnake[0];
+    const newHead = {
+        x: (head.x + botDirection.x + GRID_SIZE) % GRID_SIZE,
+        y: (head.y + botDirection.y + GRID_SIZE) % GRID_SIZE
+    };
+
+    // Check if bot hits player's snake
+    for (const segment of mySnake) {
+        if (newHead.x === segment.x && newHead.y === segment.y) {
+            handleWin();
+            return;
+        }
+    }
+
+    // Check if bot hits itself
+    for (let i = 0; i < opponentSnake.length - 1; i++) {
+        if (newHead.x === opponentSnake[i].x && newHead.y === opponentSnake[i].y) {
+            handleWin();
+            return;
+        }
+    }
+
+    // Move bot snake
+    opponentSnake.unshift(newHead);
+
+    // Grow over time
+    const elapsed = Date.now() - gameStartTime;
+    const targetLength = 3 + Math.floor(elapsed / GROW_INTERVAL);
+
+    while (opponentSnake.length > targetLength) {
+        opponentSnake.pop();
+    }
+
+    // Bot AI: decide next direction
+    botDecideDirection();
+}
+
+function botDecideDirection() {
+    const head = opponentSnake[0];
+    const possibleDirs = [];
+
+    // Check all four directions
+    const directions = [
+        { x: 0, y: -1, name: 'up' },
+        { x: 0, y: 1, name: 'down' },
+        { x: -1, y: 0, name: 'left' },
+        { x: 1, y: 0, name: 'right' }
+    ];
+
+    for (const dir of directions) {
+        // Can't reverse direction
+        if (dir.x === -botDirection.x && dir.y === -botDirection.y) {
+            continue;
+        }
+
+        const newPos = {
+            x: (head.x + dir.x + GRID_SIZE) % GRID_SIZE,
+            y: (head.y + dir.y + GRID_SIZE) % GRID_SIZE
+        };
+
+        // Check if this position is safe
+        let safe = true;
+
+        // Check collision with player
+        for (const segment of mySnake) {
+            if (newPos.x === segment.x && newPos.y === segment.y) {
+                safe = false;
+                break;
+            }
+        }
+
+        // Check collision with self
+        if (safe) {
+            for (const segment of opponentSnake) {
+                if (newPos.x === segment.x && newPos.y === segment.y) {
+                    safe = false;
+                    break;
+                }
+            }
+        }
+
+        if (safe) {
+            possibleDirs.push(dir);
+        }
+    }
+
+    // Choose a direction (prefer current direction if safe, otherwise random)
+    if (possibleDirs.length > 0) {
+        // Check if current direction is in safe options
+        const currentDirSafe = possibleDirs.find(
+            d => d.x === botDirection.x && d.y === botDirection.y
+        );
+
+        if (currentDirSafe && Math.random() > 0.2) {
+            // 80% chance to keep going straight if safe
+            botNextDirection = { x: botDirection.x, y: botDirection.y };
+        } else {
+            // Pick a random safe direction
+            const chosen = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+            botNextDirection = { x: chosen.x, y: chosen.y };
+        }
+    }
+    // If no safe directions, bot will crash (keeps current direction)
 }
 
 function handleLoss() {
     gameRunning = false;
     const survivalTime = Date.now() - gameStartTime;
 
-    // Notify opponent they won
-    sendMessage({ type: 'collision', survivalTime: survivalTime });
+    // Notify opponent they won (if not playing bot)
+    if (!isPlayingBot) {
+        sendMessage({ type: 'collision', survivalTime: survivalTime });
+    }
 
     // Show loss banner
     winnerBanner.textContent = `${playerName} crashed! Survived: ${survivalTime}ms`;
     winnerBanner.className = 'you-lose';
     winnerBanner.classList.remove('hidden');
 
+    // When playing bot, add bot's score
+    if (isPlayingBot) {
+        const botSurvivalTime = Date.now() - gameStartTime;
+        addHighscore(opponentName, botSurvivalTime, false);
+    }
+
     // Restart after delay (give time for highscore sync)
     setTimeout(() => {
-        sendMessage({ type: 'restart' });
+        if (!isPlayingBot) {
+            sendMessage({ type: 'restart' });
+        }
         resetGame();
     }, 2500);
 }
@@ -287,13 +425,20 @@ function handleWin() {
     gameRunning = false;
     const mySurvivalTime = Date.now() - gameStartTime;
 
-    // Add to highscores and send to opponent
-    addHighscore(playerName, mySurvivalTime, true);
+    // Add to highscores (send to opponent only if not playing bot)
+    addHighscore(playerName, mySurvivalTime, !isPlayingBot);
 
     // Show win banner
     winnerBanner.textContent = `${playerName} wins! Survived: ${mySurvivalTime}ms`;
     winnerBanner.className = 'you-win';
     winnerBanner.classList.remove('hidden');
+
+    // When playing bot, auto restart after delay
+    if (isPlayingBot) {
+        setTimeout(() => {
+            resetGame();
+        }, 2500);
+    }
 }
 
 function addHighscore(player, time, sendToOpponent = false) {
@@ -511,6 +656,18 @@ copyAnswerBtn.addEventListener('click', () => {
     navigator.clipboard.writeText(answerOutput.value);
     copyAnswerBtn.textContent = 'Copied!';
     setTimeout(() => copyAnswerBtn.textContent = 'Copy Answer', 2000);
+});
+
+// Play against bot
+const playBotBtn = document.getElementById('play-bot-btn');
+playBotBtn.addEventListener('click', () => {
+    isHost = true;
+    isPlayingBot = true;
+    opponentName = 'Snake Bot';
+    createOfferBtn.disabled = true;
+    joinBtn.disabled = true;
+    playBotBtn.disabled = true;
+    startGame();
 });
 
 // Initial highscore display
