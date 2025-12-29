@@ -1,0 +1,287 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+    color: #fff;
+    padding: 20px;
+}
+
+.container {
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+/* Name input */
+.name-input-row {
+    display: flex;
+    gap: 10px;
+}
+
+#player-name {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font-size: 1rem;
+}
+
+#player-name:focus {
+    outline: none;
+    border-color: #00d9ff;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 5px;
+    color: #00d9ff;
+}
+
+.subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+.panel {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+h2 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: #00d9ff;
+}
+
+h3 {
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: #ccc;
+}
+
+.role-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.btn.primary {
+    background: #00d9ff;
+    color: #1a1a2e;
+    font-weight: bold;
+}
+
+.btn.primary:hover {
+    background: #00b8d9;
+}
+
+.btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.btn.small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.step {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font-family: monospace;
+    font-size: 0.8rem;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #00d9ff;
+}
+
+textarea[readonly] {
+    background: rgba(0, 217, 255, 0.1);
+}
+
+.status {
+    text-align: center;
+    padding: 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+}
+
+.status.connected {
+    background: rgba(0, 255, 100, 0.2);
+    color: #00ff64;
+}
+
+.status.error {
+    background: rgba(255, 0, 0, 0.2);
+    color: #ff6464;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Game styles */
+#game-panel {
+    text-align: center;
+}
+
+#game-canvas {
+    background: #0a0a1a;
+    border: 2px solid #00d9ff;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+
+#scores {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 15px;
+}
+
+.score-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.player-label {
+    font-size: 0.9rem;
+    padding: 4px 12px;
+    border-radius: 4px;
+}
+
+.player-label.you {
+    background: rgba(0, 255, 100, 0.2);
+    color: #00ff64;
+}
+
+.player-label.opponent {
+    background: rgba(255, 100, 100, 0.2);
+    color: #ff6464;
+}
+
+.score-box span:last-child {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+#winner-banner {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    animation: pulse 0.5s ease-in-out;
+}
+
+#winner-banner.you-win {
+    background: rgba(0, 255, 100, 0.3);
+    color: #00ff64;
+    border: 2px solid #00ff64;
+}
+
+#winner-banner.you-lose {
+    background: rgba(255, 100, 100, 0.3);
+    color: #ff6464;
+    border: 2px solid #ff6464;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+#controls-hint {
+    margin-top: 10px;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+#highscores {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    text-align: left;
+}
+
+#highscores h3 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #ffcc00;
+}
+
+#highscore-list {
+    list-style-position: inside;
+    color: #ccc;
+}
+
+#highscore-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#highscore-list li:last-child {
+    border-bottom: none;
+}
+
+#highscore-list .player-name {
+    color: #00d9ff;
+}
+
+#highscore-list .score-time {
+    float: right;
+    color: #ffcc00;
+}

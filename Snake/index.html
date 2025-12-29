@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Snake Battle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>P2P Snake Battle</h1>
+        <p class="subtitle">No server required - connect directly with a friend!</p>
+
+        <!-- Name input panel -->
+        <div id="name-panel" class="panel">
+            <h2>Enter Your Name</h2>
+            <div class="name-input-row">
+                <input type="text" id="player-name" placeholder="Your name..." maxlength="20">
+                <button id="name-submit-btn" class="btn primary">Continue</button>
+            </div>
+        </div>
+
+        <div id="connection-panel" class="panel hidden">
+            <h2>Establish Connection</h2>
+
+            <div class="role-buttons">
+                <button id="create-offer-btn" class="btn primary">Create Offer (Host)</button>
+                <button id="join-btn" class="btn secondary">Join (Guest)</button>
+            </div>
+
+            <!-- Host flow -->
+            <div id="host-section" class="hidden">
+                <div class="step">
+                    <h3>Step 1: Send this offer to your friend</h3>
+                    <textarea id="offer-output" readonly placeholder="Generating offer..."></textarea>
+                    <button id="copy-offer-btn" class="btn small">Copy Offer</button>
+                </div>
+                <div class="step">
+                    <h3>Step 2: Paste their answer here</h3>
+                    <textarea id="answer-input" placeholder="Paste the answer from your friend..."></textarea>
+                    <button id="accept-answer-btn" class="btn primary">Accept Answer</button>
+                </div>
+            </div>
+
+            <!-- Guest flow -->
+            <div id="guest-section" class="hidden">
+                <div class="step">
+                    <h3>Step 1: Paste the offer from host</h3>
+                    <textarea id="offer-input" placeholder="Paste the offer here..."></textarea>
+                    <button id="create-answer-btn" class="btn primary">Create Answer</button>
+                </div>
+                <div class="step">
+                    <h3>Step 2: Send this answer back to host</h3>
+                    <textarea id="answer-output" readonly placeholder="Answer will appear here..."></textarea>
+                    <button id="copy-answer-btn" class="btn small">Copy Answer</button>
+                </div>
+            </div>
+
+            <div id="connection-status" class="status">Status: Not connected</div>
+        </div>
+
+        <div id="game-panel" class="panel hidden">
+            <div id="winner-banner" class="hidden"></div>
+            <div id="scores">
+                <div class="score-box">
+                    <span class="player-label you" id="my-name-label">You</span>
+                    <span id="my-score">0</span>
+                </div>
+                <div class="score-box">
+                    <span class="player-label opponent" id="opponent-name-label">Opponent</span>
+                    <span id="opponent-score">0</span>
+                </div>
+            </div>
+            <canvas id="game-canvas" width="800" height="800"></canvas>
+            <div id="controls-hint">Controls: Arrow keys or WASD</div>
+
+            <div id="highscores">
+                <h3>High Scores (Survival Time)</h3>
+                <ol id="highscore-list"></ol>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

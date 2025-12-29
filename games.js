@@ -40,6 +40,12 @@ const games = [
         description: "Kør politibil i 3D og jag forbrydere gennem byen! Fang dem alle!",
         folder: "PoliceChase",
         screenshot: "PoliceChase/screenshot.png"
+    },
+    {
+        title: "P2P Snake Battle",
+        description: "Multiplayer snake game - no server needed! Connect with a friend and battle to survive!",
+        folder: "Snake",
+        screenshot: "Snake/screenshot.png"
     }
 ];
 
