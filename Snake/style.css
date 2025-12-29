@@ -13,7 +13,7 @@ body {
 }
 
 .container {
-    max-width: 850px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -174,47 +174,22 @@ textarea[readonly] {
     text-align: center;
 }
 
+.game-layout {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.game-area {
+    flex-shrink: 0;
+}
+
 #game-canvas {
     background: #0a0a1a;
     border: 2px solid #00d9ff;
     border-radius: 8px;
     display: block;
-    margin: 0 auto;
-}
-
-#scores {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin-bottom: 15px;
-}
-
-.score-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-.player-label {
-    font-size: 0.9rem;
-    padding: 4px 12px;
-    border-radius: 4px;
-}
-
-.player-label.you {
-    background: rgba(0, 255, 100, 0.2);
-    color: #00ff64;
-}
-
-.player-label.opponent {
-    background: rgba(255, 100, 100, 0.2);
-    color: #ff6464;
-}
-
-.score-box span:last-child {
-    font-size: 1.5rem;
-    font-weight: bold;
 }
 
 #winner-banner {
@@ -247,10 +222,11 @@ textarea[readonly] {
     margin-top: 10px;
     color: #666;
     font-size: 0.85rem;
+    text-align: center;
 }
 
 #highscores {
-    margin-top: 20px;
+    width: 200px;
     padding: 15px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;

@@ -40,14 +40,10 @@ const connectionPanel = document.getElementById('connection-panel');
 const gamePanel = document.getElementById('game-panel');
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
-const myScoreEl = document.getElementById('my-score');
-const opponentScoreEl = document.getElementById('opponent-score');
-const myNameLabel = document.getElementById('my-name-label');
-const opponentNameLabel = document.getElementById('opponent-name-label');
 const winnerBanner = document.getElementById('winner-banner');
 
 // Game constants
-const GRID_SIZE = 30; // Bigger board
+const GRID_SIZE = 25;
 const CELL_SIZE = canvas.width / GRID_SIZE;
 const GROW_INTERVAL = 2000; // Grow every 2 seconds
 const GAME_SPEED = 200; // Move every 200ms (half speed)
@@ -60,8 +56,6 @@ let mySnake = [];
 let opponentSnake = [];
 let myDirection = { x: 0, y: -1 };
 let nextDirection = { x: 0, y: -1 };
-let myScore = 0;
-let opponentScore = 0;
 let highscores = JSON.parse(localStorage.getItem('snakeHighscores') || '[]');
 
 // Colors
@@ -82,7 +76,6 @@ function submitName() {
         playerName = name;
         namePanel.classList.add('hidden');
         connectionPanel.classList.remove('hidden');
-        myNameLabel.textContent = playerName;
     } else {
         playerNameInput.focus();
     }
@@ -148,14 +141,13 @@ function handleMessage(msg) {
     switch (msg.type) {
         case 'name':
             opponentName = msg.name;
-            opponentNameLabel.textContent = opponentName;
             break;
         case 'snake':
             opponentSnake = msg.snake;
             break;
         case 'collision':
             // Opponent reports they hit something
-            handleWin(msg.survivalTime);
+            handleWin();
             break;
         case 'highscore':
             // Opponent sent their highscore to add to our list
@@ -291,21 +283,9 @@ function handleLoss() {
     }, 2500);
 }
 
-function handleWin(opponentSurvivalTime) {
+function handleWin() {
     gameRunning = false;
     const mySurvivalTime = Date.now() - gameStartTime;
-
-    // Update best score (keep highest)
-    if (mySurvivalTime > myScore) {
-        myScore = mySurvivalTime;
-        myScoreEl.textContent = myScore;
-    }
-
-    // Update opponent's best score
-    if (opponentSurvivalTime > opponentScore) {
-        opponentScore = opponentSurvivalTime;
-        opponentScoreEl.textContent = opponentScore;
-    }
 
     // Add to highscores and send to opponent
     addHighscore(playerName, mySurvivalTime, true);

@@ -61,22 +61,15 @@
 
         <div id="game-panel" class="panel hidden">
             <div id="winner-banner" class="hidden"></div>
-            <div id="scores">
-                <div class="score-box">
-                    <span class="player-label you" id="my-name-label">You</span>
-                    <span id="my-score">0</span>
+            <div class="game-layout">
+                <div class="game-area">
+                    <canvas id="game-canvas" width="625" height="625"></canvas>
+                    <div id="controls-hint">Controls: Arrow keys or WASD</div>
                 </div>
-                <div class="score-box">
-                    <span class="player-label opponent" id="opponent-name-label">Opponent</span>
-                    <span id="opponent-score">0</span>
+                <div id="highscores">
+                    <h3>High Scores</h3>
+                    <ol id="highscore-list"></ol>
                 </div>
-            </div>
-            <canvas id="game-canvas" width="800" height="800"></canvas>
-            <div id="controls-hint">Controls: Arrow keys or WASD</div>
-
-            <div id="highscores">
-                <h3>High Scores (Survival Time)</h3>
-                <ol id="highscore-list"></ol>
             </div>
         </div>
     </div>
