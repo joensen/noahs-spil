@@ -1,5 +1,23 @@
-// P2P Snake Battle with WebRTC
-// No server required!
+// P2P Snake Battle with WebRTC + Firebase Signaling
+// Automatic connection via room codes!
+
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, push, remove, onDisconnect } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js';
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDN8WfrI0V7XBr2RYxGdG-ae1s3WJZGECU",
+    authDomain: "p2psnake.firebaseapp.com",
+    databaseURL: "https://p2psnake-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "p2psnake",
+    storageBucket: "p2psnake.firebasestorage.app",
+    messagingSenderId: "26141565584",
+    appId: "1:26141565584:web:2803e789e121a880b86e15"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 let peerConnection = null;
 let dataChannel = null;
@@ -7,9 +25,11 @@ let isHost = false;
 let isPlayingBot = false;
 let playerName = '';
 let opponentName = 'Opponent';
+let roomId = null;
+let unsubscribers = [];
 
 // STUN servers for NAT traversal
-const config = {
+const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' }
@@ -22,20 +42,13 @@ const playerNameInput = document.getElementById('player-name');
 const nameSubmitBtn = document.getElementById('name-submit-btn');
 
 // DOM Elements - Connection
-const createOfferBtn = document.getElementById('create-offer-btn');
-const joinBtn = document.getElementById('join-btn');
+const createRoomBtn = document.getElementById('create-room-btn');
+const joinRoomBtn = document.getElementById('join-room-btn');
 const hostSection = document.getElementById('host-section');
 const guestSection = document.getElementById('guest-section');
-const offerOutput = document.getElementById('offer-output');
-const offerInput = document.getElementById('offer-input');
-const answerOutput = document.getElementById('answer-output');
-const answerInput = document.getElementById('answer-input');
-const copyOfferBtn = document.getElementById('copy-offer-btn');
-const copyAnswerBtn = document.getElementById('copy-answer-btn');
-const createAnswerBtn = document.getElementById('create-answer-btn');
-const acceptAnswerBtn = document.getElementById('accept-answer-btn');
 const connectionStatus = document.getElementById('connection-status');
 const connectionPanel = document.getElementById('connection-panel');
+let roomListUnsub = null;
 
 // DOM Elements - Game
 const gamePanel = document.getElementById('game-panel');
@@ -46,8 +59,8 @@ const winnerBanner = document.getElementById('winner-banner');
 // Game constants
 const GRID_SIZE = 25;
 const CELL_SIZE = canvas.width / GRID_SIZE;
-const GROW_INTERVAL = 2000; // Grow every 2 seconds
-const GAME_SPEED = 200; // Move every 200ms (half speed)
+const GROW_INTERVAL = 2000;
+const GAME_SPEED = 200;
 
 // Game state
 let gameRunning = false;
@@ -69,6 +82,16 @@ const MY_HEAD_COLOR = '#00cc50';
 const OPPONENT_COLOR = '#ff6464';
 const OPPONENT_HEAD_COLOR = '#cc5050';
 
+// Generate a random 4-letter room code
+function generateRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // Removed I and O to avoid confusion
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
 // Name submission
 nameSubmitBtn.addEventListener('click', submitName);
 playerNameInput.addEventListener('keypress', (e) => {
@@ -88,24 +111,22 @@ function submitName() {
 
 // Initialize peer connection
 function createPeerConnection() {
-    peerConnection = new RTCPeerConnection(config);
+    peerConnection = new RTCPeerConnection(rtcConfig);
 
+    // Collect ICE candidates and send to Firebase
     peerConnection.onicecandidate = (event) => {
-        if (event.candidate === null) {
-            if (offerOutput.value) {
-                offerOutput.value = btoa(JSON.stringify(peerConnection.localDescription));
-            }
-            if (answerOutput.value) {
-                answerOutput.value = btoa(JSON.stringify(peerConnection.localDescription));
-            }
+        if (event.candidate && roomId) {
+            const candidateRef = ref(db, `rooms/${roomId}/candidates/${isHost ? 'host' : 'guest'}`);
+            push(candidateRef, event.candidate.toJSON());
         }
     };
 
     peerConnection.onconnectionstatechange = () => {
         updateStatus(peerConnection.connectionState);
         if (peerConnection.connectionState === 'connected') {
-            // Send our name to opponent
             sendMessage({ type: 'name', name: playerName });
+            // Clean up Firebase room after connection is established
+            cleanupRoom();
             startGame();
         }
     };
@@ -121,7 +142,6 @@ function createPeerConnection() {
 function setupDataChannel() {
     dataChannel.onopen = () => {
         updateStatus('connected');
-        // Send our name to opponent
         sendMessage({ type: 'name', name: playerName });
         startGame();
     };
@@ -151,11 +171,9 @@ function handleMessage(msg) {
             opponentSnake = msg.snake;
             break;
         case 'collision':
-            // Opponent reports they hit something
             handleWin();
             break;
         case 'highscore':
-            // Opponent sent their highscore to add to our list
             addHighscore(msg.player, msg.time, false);
             break;
         case 'restart':
@@ -174,12 +192,205 @@ function updateStatus(state) {
     }
 }
 
+// Clean up Firebase listeners
+function cleanupListeners() {
+    unsubscribers.forEach(unsub => {
+        if (typeof unsub === 'function') unsub();
+    });
+    unsubscribers = [];
+}
+
+// Clean up Firebase room
+function cleanupRoom() {
+    if (roomId) {
+        remove(ref(db, `rooms/${roomId}`));
+    }
+    cleanupListeners();
+}
+
+// Host: Create a room
+async function createRoom() {
+    isHost = true;
+    roomId = generateRoomCode();
+
+    createRoomBtn.disabled = true;
+    joinRoomBtn.disabled = true;
+    document.getElementById('play-bot-btn').disabled = true;
+    hostSection.classList.remove('hidden');
+    updateStatus('creating room...');
+
+    createPeerConnection();
+    dataChannel = peerConnection.createDataChannel('game');
+    setupDataChannel();
+
+    // Create offer
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    // Wait for ICE gathering to complete
+    await new Promise(resolve => {
+        if (peerConnection.iceGatheringState === 'complete') {
+            resolve();
+        } else {
+            peerConnection.addEventListener('icegatheringstatechange', () => {
+                if (peerConnection.iceGatheringState === 'complete') {
+                    resolve();
+                }
+            });
+            // Timeout after 5 seconds
+            setTimeout(resolve, 5000);
+        }
+    });
+
+    // Store offer in Firebase
+    const roomRef = ref(db, `rooms/${roomId}`);
+    await set(roomRef, {
+        offer: {
+            type: peerConnection.localDescription.type,
+            sdp: peerConnection.localDescription.sdp
+        },
+        hostName: playerName,
+        created: Date.now()
+    });
+
+    // Set up cleanup on disconnect
+    onDisconnect(roomRef).remove();
+
+    updateStatus('waiting for opponent...');
+
+    // Listen for answer
+    const answerRef = ref(db, `rooms/${roomId}/answer`);
+    const answerUnsub = onValue(answerRef, async (snapshot) => {
+        const answer = snapshot.val();
+        if (answer && peerConnection.signalingState !== 'stable') {
+            await peerConnection.setRemoteDescription(answer);
+            updateStatus('connecting...');
+        }
+    });
+    unsubscribers.push(answerUnsub);
+
+    // Listen for guest ICE candidates
+    const guestCandidatesRef = ref(db, `rooms/${roomId}/candidates/guest`);
+    const candidatesUnsub = onValue(guestCandidatesRef, (snapshot) => {
+        const candidates = snapshot.val();
+        if (candidates) {
+            Object.values(candidates).forEach(candidate => {
+                peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            });
+        }
+    });
+    unsubscribers.push(candidatesUnsub);
+}
+
+// Start listening for available rooms
+function startListeningForRooms() {
+    const roomsRef = ref(db, 'rooms');
+    roomListUnsub = onValue(roomsRef, (snapshot) => {
+        const rooms = snapshot.val();
+        renderRoomList(rooms);
+    });
+}
+
+// Stop listening for rooms
+function stopListeningForRooms() {
+    if (roomListUnsub) {
+        roomListUnsub();
+        roomListUnsub = null;
+    }
+}
+
+// Render the room list
+function renderRoomList(rooms) {
+    const roomListEl = document.getElementById('room-list');
+    roomListEl.innerHTML = '';
+
+    if (!rooms || Object.keys(rooms).length === 0) {
+        roomListEl.innerHTML = '<p class="no-rooms">No rooms available. Ask a friend to create one!</p>';
+        return;
+    }
+
+    for (const [code, room] of Object.entries(rooms)) {
+        // Skip rooms that already have an answer (someone is joining)
+        if (room.answer) continue;
+
+        const roomEl = document.createElement('div');
+        roomEl.className = 'room-item';
+        roomEl.innerHTML = `
+            <span class="room-host">${room.hostName || 'Unknown'}</span>
+            <button class="btn primary" data-room="${code}">Join</button>
+        `;
+        roomEl.querySelector('button').addEventListener('click', () => joinRoom(code, room));
+        roomListEl.appendChild(roomEl);
+    }
+
+    // If all rooms have answers, show no rooms message
+    if (roomListEl.children.length === 0) {
+        roomListEl.innerHTML = '<p class="no-rooms">No rooms available. Ask a friend to create one!</p>';
+    }
+}
+
+// Guest: Join a room
+async function joinRoom(code, roomData) {
+    roomId = code;
+    isHost = false;
+
+    // Stop listening for rooms
+    stopListeningForRooms();
+
+    // Disable all join buttons
+    document.querySelectorAll('#room-list button').forEach(btn => btn.disabled = true);
+
+    updateStatus('joining room...');
+
+    createPeerConnection();
+
+    // Set remote description (the offer)
+    await peerConnection.setRemoteDescription(roomData.offer);
+
+    // Create and send answer
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    // Wait for ICE gathering
+    await new Promise(resolve => {
+        if (peerConnection.iceGatheringState === 'complete') {
+            resolve();
+        } else {
+            peerConnection.addEventListener('icegatheringstatechange', () => {
+                if (peerConnection.iceGatheringState === 'complete') {
+                    resolve();
+                }
+            });
+            setTimeout(resolve, 5000);
+        }
+    });
+
+    // Store answer in Firebase
+    await set(ref(db, `rooms/${roomId}/answer`), {
+        type: peerConnection.localDescription.type,
+        sdp: peerConnection.localDescription.sdp
+    });
+
+    updateStatus('connecting...');
+
+    // Listen for host ICE candidates
+    const hostCandidatesRef = ref(db, `rooms/${roomId}/candidates/host`);
+    const candidatesUnsub = onValue(hostCandidatesRef, (snapshot) => {
+        const candidates = snapshot.val();
+        if (candidates) {
+            Object.values(candidates).forEach(candidate => {
+                peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            });
+        }
+    });
+    unsubscribers.push(candidatesUnsub);
+}
+
 // Game functions
 function startGame() {
     connectionPanel.classList.add('hidden');
     gamePanel.classList.remove('hidden');
 
-    // Reset highscores for new connection
     highscores = [];
     localStorage.setItem('snakeHighscores', JSON.stringify(highscores));
     updateHighscoreDisplay();
@@ -188,28 +399,23 @@ function startGame() {
 }
 
 function resetGame() {
-    // Stop any existing game loop
     if (gameLoopId) {
         clearTimeout(gameLoopId);
         gameLoopId = null;
     }
 
-    // Initialize snakes at different positions, facing up/down (not at each other)
     if (isHost) {
-        // Host starts on left side, facing up
         mySnake = [{ x: 10, y: 20 }, { x: 10, y: 21 }, { x: 10, y: 22 }];
-        myDirection = { x: 0, y: -1 }; // Facing up
+        myDirection = { x: 0, y: -1 };
     } else {
-        // Guest starts on right side, facing down
         mySnake = [{ x: 20, y: 10 }, { x: 20, y: 9 }, { x: 20, y: 8 }];
-        myDirection = { x: 0, y: 1 }; // Facing down
+        myDirection = { x: 0, y: 1 };
     }
     nextDirection = { ...myDirection };
 
-    // Initialize bot snake if playing against bot
     if (isPlayingBot) {
         opponentSnake = [{ x: 20, y: 10 }, { x: 20, y: 9 }, { x: 20, y: 8 }];
-        botDirection = { x: 0, y: 1 }; // Facing down
+        botDirection = { x: 0, y: 1 };
         botNextDirection = { x: 0, y: 1 };
     } else {
         opponentSnake = [];
@@ -218,7 +424,6 @@ function resetGame() {
     gameStartTime = Date.now();
     gameRunning = true;
 
-    // Hide winner banner after a moment
     setTimeout(() => {
         winnerBanner.classList.add('hidden');
     }, 2000);
@@ -236,17 +441,14 @@ function gameLoop() {
 }
 
 function update() {
-    // Apply direction change
     myDirection = { ...nextDirection };
 
-    // Calculate new head position with wrapping
     const head = mySnake[0];
     const newHead = {
         x: (head.x + myDirection.x + GRID_SIZE) % GRID_SIZE,
         y: (head.y + myDirection.y + GRID_SIZE) % GRID_SIZE
     };
 
-    // Check collision with opponent snake
     for (const segment of opponentSnake) {
         if (newHead.x === segment.x && newHead.y === segment.y) {
             handleLoss();
@@ -254,7 +456,6 @@ function update() {
         }
     }
 
-    // Check collision with own snake (except last segment which will move)
     for (let i = 0; i < mySnake.length - 1; i++) {
         if (newHead.x === mySnake[i].x && newHead.y === mySnake[i].y) {
             handleLoss();
@@ -262,10 +463,8 @@ function update() {
         }
     }
 
-    // Move snake
     mySnake.unshift(newHead);
 
-    // Grow over time (every 2 seconds)
     const elapsed = Date.now() - gameStartTime;
     const targetLength = 3 + Math.floor(elapsed / GROW_INTERVAL);
 
@@ -273,7 +472,6 @@ function update() {
         mySnake.pop();
     }
 
-    // Send position to opponent (or update bot)
     if (isPlayingBot) {
         updateBot();
     } else {
@@ -281,19 +479,15 @@ function update() {
     }
 }
 
-// Bot AI
 function updateBot() {
-    // Apply bot's direction change
     botDirection = { ...botNextDirection };
 
-    // Calculate new head position with wrapping
     const head = opponentSnake[0];
     const newHead = {
         x: (head.x + botDirection.x + GRID_SIZE) % GRID_SIZE,
         y: (head.y + botDirection.y + GRID_SIZE) % GRID_SIZE
     };
 
-    // Check if bot hits player's snake
     for (const segment of mySnake) {
         if (newHead.x === segment.x && newHead.y === segment.y) {
             handleWin();
@@ -301,7 +495,6 @@ function updateBot() {
         }
     }
 
-    // Check if bot hits itself
     for (let i = 0; i < opponentSnake.length - 1; i++) {
         if (newHead.x === opponentSnake[i].x && newHead.y === opponentSnake[i].y) {
             handleWin();
@@ -309,10 +502,8 @@ function updateBot() {
         }
     }
 
-    // Move bot snake
     opponentSnake.unshift(newHead);
 
-    // Grow over time
     const elapsed = Date.now() - gameStartTime;
     const targetLength = 3 + Math.floor(elapsed / GROW_INTERVAL);
 
@@ -320,7 +511,6 @@ function updateBot() {
         opponentSnake.pop();
     }
 
-    // Bot AI: decide next direction
     botDecideDirection();
 }
 
@@ -328,7 +518,6 @@ function botDecideDirection() {
     const head = opponentSnake[0];
     const possibleDirs = [];
 
-    // Check all four directions
     const directions = [
         { x: 0, y: -1, name: 'up' },
         { x: 0, y: 1, name: 'down' },
@@ -337,7 +526,6 @@ function botDecideDirection() {
     ];
 
     for (const dir of directions) {
-        // Can't reverse direction
         if (dir.x === -botDirection.x && dir.y === -botDirection.y) {
             continue;
         }
@@ -347,10 +535,8 @@ function botDecideDirection() {
             y: (head.y + dir.y + GRID_SIZE) % GRID_SIZE
         };
 
-        // Check if this position is safe
         let safe = true;
 
-        // Check collision with player
         for (const segment of mySnake) {
             if (newPos.x === segment.x && newPos.y === segment.y) {
                 safe = false;
@@ -358,7 +544,6 @@ function botDecideDirection() {
             }
         }
 
-        // Check collision with self
         if (safe) {
             for (const segment of opponentSnake) {
                 if (newPos.x === segment.x && newPos.y === segment.y) {
@@ -373,46 +558,37 @@ function botDecideDirection() {
         }
     }
 
-    // Choose a direction (prefer current direction if safe, otherwise random)
     if (possibleDirs.length > 0) {
-        // Check if current direction is in safe options
         const currentDirSafe = possibleDirs.find(
             d => d.x === botDirection.x && d.y === botDirection.y
         );
 
         if (currentDirSafe && Math.random() > 0.2) {
-            // 80% chance to keep going straight if safe
             botNextDirection = { x: botDirection.x, y: botDirection.y };
         } else {
-            // Pick a random safe direction
             const chosen = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
             botNextDirection = { x: chosen.x, y: chosen.y };
         }
     }
-    // If no safe directions, bot will crash (keeps current direction)
 }
 
 function handleLoss() {
     gameRunning = false;
     const survivalTime = Date.now() - gameStartTime;
 
-    // Notify opponent they won (if not playing bot)
     if (!isPlayingBot) {
         sendMessage({ type: 'collision', survivalTime: survivalTime });
     }
 
-    // Show loss banner
     winnerBanner.textContent = `${playerName} crashed! Survived: ${survivalTime}ms`;
     winnerBanner.className = 'you-lose';
     winnerBanner.classList.remove('hidden');
 
-    // When playing bot, add bot's score
     if (isPlayingBot) {
         const botSurvivalTime = Date.now() - gameStartTime;
         addHighscore(opponentName, botSurvivalTime, false);
     }
 
-    // Restart after delay (give time for highscore sync)
     setTimeout(() => {
         if (!isPlayingBot) {
             sendMessage({ type: 'restart' });
@@ -425,15 +601,12 @@ function handleWin() {
     gameRunning = false;
     const mySurvivalTime = Date.now() - gameStartTime;
 
-    // Add to highscores (send to opponent only if not playing bot)
     addHighscore(playerName, mySurvivalTime, !isPlayingBot);
 
-    // Show win banner
     winnerBanner.textContent = `${playerName} wins! Survived: ${mySurvivalTime}ms`;
     winnerBanner.className = 'you-win';
     winnerBanner.classList.remove('hidden');
 
-    // When playing bot, auto restart after delay
     if (isPlayingBot) {
         setTimeout(() => {
             resetGame();
@@ -444,11 +617,10 @@ function handleWin() {
 function addHighscore(player, time, sendToOpponent = false) {
     highscores.push({ player, time, date: new Date().toLocaleDateString() });
     highscores.sort((a, b) => b.time - a.time);
-    highscores = highscores.slice(0, 10); // Keep top 10
+    highscores = highscores.slice(0, 10);
     localStorage.setItem('snakeHighscores', JSON.stringify(highscores));
     updateHighscoreDisplay();
 
-    // Send highscore to opponent so they have it too
     if (sendToOpponent) {
         sendMessage({ type: 'highscore', player, time });
     }
@@ -474,11 +646,9 @@ function updateHighscoreDisplay() {
 }
 
 function draw() {
-    // Clear canvas
     ctx.fillStyle = '#0a0a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw grid
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= GRID_SIZE; i++) {
@@ -492,7 +662,6 @@ function draw() {
         ctx.stroke();
     }
 
-    // Draw opponent snake
     opponentSnake.forEach((segment, index) => {
         ctx.fillStyle = index === 0 ? OPPONENT_HEAD_COLOR : OPPONENT_COLOR;
         ctx.fillRect(
@@ -503,7 +672,6 @@ function draw() {
         );
     });
 
-    // Draw my snake
     mySnake.forEach((segment, index) => {
         ctx.fillStyle = index === 0 ? MY_HEAD_COLOR : MY_COLOR;
         ctx.fillRect(
@@ -514,7 +682,6 @@ function draw() {
         );
     });
 
-    // Draw survival time
     const elapsed = Date.now() - gameStartTime;
     ctx.fillStyle = '#fff';
     ctx.font = '16px monospace';
@@ -570,7 +737,6 @@ document.addEventListener('keydown', (e) => {
 document.querySelectorAll('.dpad-btn').forEach(btn => {
     const dir = btn.dataset.dir;
 
-    // Handle both touch and click
     btn.addEventListener('touchstart', (e) => {
         e.preventDefault();
         handleDirection(dir);
@@ -582,80 +748,16 @@ document.querySelectorAll('.dpad-btn').forEach(btn => {
     });
 });
 
-// WebRTC Connection Setup
-createOfferBtn.addEventListener('click', async () => {
-    isHost = true;
-    createOfferBtn.disabled = true;
-    joinBtn.disabled = true;
-    hostSection.classList.remove('hidden');
+// Connection button handlers
+createRoomBtn.addEventListener('click', createRoom);
 
-    createPeerConnection();
-    dataChannel = peerConnection.createDataChannel('game');
-    setupDataChannel();
-
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-
-    offerOutput.value = 'Gathering connection info...';
-    setTimeout(() => {
-        if (offerOutput.value === 'Gathering connection info...') {
-            offerOutput.value = btoa(JSON.stringify(peerConnection.localDescription));
-        }
-    }, 2000);
-});
-
-acceptAnswerBtn.addEventListener('click', async () => {
-    try {
-        const answer = JSON.parse(atob(answerInput.value.trim()));
-        await peerConnection.setRemoteDescription(answer);
-        updateStatus('connecting...');
-    } catch (e) {
-        alert('Invalid answer! Make sure you copied the entire text.');
-        console.error(e);
-    }
-});
-
-joinBtn.addEventListener('click', () => {
+joinRoomBtn.addEventListener('click', () => {
     isHost = false;
-    createOfferBtn.disabled = true;
-    joinBtn.disabled = true;
+    createRoomBtn.disabled = true;
+    joinRoomBtn.disabled = true;
+    document.getElementById('play-bot-btn').disabled = true;
     guestSection.classList.remove('hidden');
-});
-
-createAnswerBtn.addEventListener('click', async () => {
-    try {
-        const offer = JSON.parse(atob(offerInput.value.trim()));
-        createPeerConnection();
-        await peerConnection.setRemoteDescription(offer);
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-
-        answerOutput.value = 'Gathering connection info...';
-        setTimeout(() => {
-            if (answerOutput.value === 'Gathering connection info...') {
-                answerOutput.value = btoa(JSON.stringify(peerConnection.localDescription));
-            }
-        }, 2000);
-
-        updateStatus('waiting for connection...');
-    } catch (e) {
-        alert('Invalid offer! Make sure you copied the entire text.');
-        console.error(e);
-    }
-});
-
-copyOfferBtn.addEventListener('click', () => {
-    offerOutput.select();
-    navigator.clipboard.writeText(offerOutput.value);
-    copyOfferBtn.textContent = 'Copied!';
-    setTimeout(() => copyOfferBtn.textContent = 'Copy Offer', 2000);
-});
-
-copyAnswerBtn.addEventListener('click', () => {
-    answerOutput.select();
-    navigator.clipboard.writeText(answerOutput.value);
-    copyAnswerBtn.textContent = 'Copied!';
-    setTimeout(() => copyAnswerBtn.textContent = 'Copy Answer', 2000);
+    startListeningForRooms();
 });
 
 // Play against bot
@@ -664,8 +766,8 @@ playBotBtn.addEventListener('click', () => {
     isHost = true;
     isPlayingBot = true;
     opponentName = 'Snake Bot';
-    createOfferBtn.disabled = true;
-    joinBtn.disabled = true;
+    createRoomBtn.disabled = true;
+    joinRoomBtn.disabled = true;
     playBotBtn.disabled = true;
     startGame();
 });

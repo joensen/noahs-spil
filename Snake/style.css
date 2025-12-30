@@ -325,3 +325,108 @@ textarea[readonly] {
     grid-column: 2;
     grid-row: 2;
 }
+
+/* Room code styles */
+.room-code-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+#room-code {
+    font-family: monospace;
+    font-size: 2.5rem;
+    font-weight: bold;
+    letter-spacing: 8px;
+    color: #00d9ff;
+    background: rgba(0, 217, 255, 0.1);
+    padding: 15px 25px;
+    border-radius: 8px;
+    border: 2px solid #00d9ff;
+}
+
+.room-code-input {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+#room-code-input {
+    font-family: monospace;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 4px;
+    text-align: center;
+    text-transform: uppercase;
+    width: 150px;
+    padding: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+}
+
+#room-code-input:focus {
+    outline: none;
+    border-color: #00d9ff;
+}
+
+#room-code-input::placeholder {
+    font-size: 0.8rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.waiting-text {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Room list styles */
+#room-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.room-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: border-color 0.2s;
+}
+
+.room-item:hover {
+    border-color: rgba(0, 217, 255, 0.3);
+}
+
+.room-item:last-child {
+    margin-bottom: 0;
+}
+
+.room-host {
+    font-weight: bold;
+    color: #00d9ff;
+    font-size: 1.1rem;
+}
+
+.no-rooms {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+    font-style: italic;
+}

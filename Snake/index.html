@@ -21,39 +21,28 @@
         </div>
 
         <div id="connection-panel" class="panel hidden">
-            <h2>Establish Connection</h2>
+            <h2>Connect to Play</h2>
 
             <div class="role-buttons">
-                <button id="create-offer-btn" class="btn primary">Create Offer (Host)</button>
-                <button id="join-btn" class="btn secondary">Join (Guest)</button>
+                <button id="create-room-btn" class="btn primary">Create Room (Host)</button>
+                <button id="join-room-btn" class="btn secondary">Join Room (Guest)</button>
                 <button id="play-bot-btn" class="btn secondary">🤖 Play vs Bot</button>
             </div>
 
             <!-- Host flow -->
             <div id="host-section" class="hidden">
                 <div class="step">
-                    <h3>Step 1: Send this offer to your friend</h3>
-                    <textarea id="offer-output" readonly placeholder="Generating offer..."></textarea>
-                    <button id="copy-offer-btn" class="btn small">Copy Offer</button>
-                </div>
-                <div class="step">
-                    <h3>Step 2: Paste their answer here</h3>
-                    <textarea id="answer-input" placeholder="Paste the answer from your friend..."></textarea>
-                    <button id="accept-answer-btn" class="btn primary">Accept Answer</button>
+                    <p class="waiting-text">Waiting for opponent to join...</p>
                 </div>
             </div>
 
             <!-- Guest flow -->
             <div id="guest-section" class="hidden">
                 <div class="step">
-                    <h3>Step 1: Paste the offer from host</h3>
-                    <textarea id="offer-input" placeholder="Paste the offer here..."></textarea>
-                    <button id="create-answer-btn" class="btn primary">Create Answer</button>
-                </div>
-                <div class="step">
-                    <h3>Step 2: Send this answer back to host</h3>
-                    <textarea id="answer-output" readonly placeholder="Answer will appear here..."></textarea>
-                    <button id="copy-answer-btn" class="btn small">Copy Answer</button>
+                    <h3>Available Rooms</h3>
+                    <div id="room-list">
+                        <p class="no-rooms">Looking for rooms...</p>
+                    </div>
                 </div>
             </div>
 
@@ -83,6 +72,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
