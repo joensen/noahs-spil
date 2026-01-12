@@ -201,10 +201,12 @@ function clearProgress() {
 async function loadGameData() {
     console.log('Loading game data...');
 
+    // Add cache-busting timestamp to force reload of updated data
+    const timestamp = new Date().getTime();
     const [starsResponse, constellationsResponse, namesResponse] = await Promise.all([
-        fetch('data/visibleStarsFormatted.json'),
-        fetch('data/ConstellationLines.json'),
-        fetch('data/constellationNames.json')
+        fetch(`data/visibleStarsFormatted.json?v=${timestamp}`),
+        fetch(`data/ConstellationLines.json?v=${timestamp}`),
+        fetch(`data/constellationNames.json?v=${timestamp}`)
     ]);
 
     if (!starsResponse.ok || !constellationsResponse.ok || !namesResponse.ok) {
@@ -216,6 +218,14 @@ async function loadGameData() {
     constellationNames = await namesResponse.json();
 
     console.log(`Loaded ${starsData.length} stars and ${Object.keys(constellationsData).length} constellations`);
+
+    // Debug: Check if HR 5506 exists
+    const hr5506 = starsData.find(s => s.hr === 5506);
+    if (hr5506) {
+        console.log('DEBUG: HR 5506 (Izar) found in loaded data:', hr5506);
+    } else {
+        console.error('DEBUG: HR 5506 NOT found in loaded data!');
+    }
 }
 
 // ===== STAR FILTERING =====
@@ -229,10 +239,20 @@ function filterConstellationStars() {
         constellation.stars.forEach(hr => requiredHRNumbers.add(hr));
     });
 
+    console.log(`DEBUG: Required HR numbers include 5506: ${requiredHRNumbers.has(5506)}`);
+
     // Filter star data to only required stars
     const filteredStars = starsData.filter(star => requiredHRNumbers.has(star.hr));
 
     console.log(`Filtered to ${filteredStars.length} constellation stars from ${starsData.length} total stars`);
+
+    // Debug: Check if HR 5506 made it through
+    const hr5506Filtered = filteredStars.find(s => s.hr === 5506);
+    if (hr5506Filtered) {
+        console.log('DEBUG: HR 5506 passed filter! Position:', hr5506Filtered.x, hr5506Filtered.y, hr5506Filtered.z);
+    } else {
+        console.error('DEBUG: HR 5506 did NOT pass filter!');
+    }
 
     return filteredStars;
 }
@@ -277,7 +297,13 @@ function createStarField(filteredStars) {
     const colors = new Float32Array(starCount * 3);
     const sizes = new Float32Array(starCount);
 
+    let hr5506Index = -1;
+
     filteredStars.forEach((star, index) => {
+        // Debug: Track HR 5506
+        if (star.hr === 5506) {
+            hr5506Index = index;
+        }
         // Stars already have Cartesian coordinates (x, y, z)
         // Scale to our sphere radius
         const magnitude = Math.sqrt(star.x * star.x + star.y * star.y + star.z * star.z);
@@ -332,6 +358,17 @@ function createStarField(filteredStars) {
     scene.add(starField);
 
     console.log(`Star field created with ${starCount} stars`);
+
+    // Debug: Report HR 5506
+    if (hr5506Index >= 0) {
+        const hr5506Data = starMeshMap.get(5506);
+        console.log(`DEBUG: HR 5506 added to star field at index ${hr5506Index}`);
+        console.log(`  Position in scene:`, hr5506Data);
+        console.log(`  BufferGeometry position:`, positions[hr5506Index * 3], positions[hr5506Index * 3 + 1], positions[hr5506Index * 3 + 2]);
+        console.log(`  Size:`, sizes[hr5506Index]);
+    } else {
+        console.error('DEBUG: HR 5506 NOT added to star field!');
+    }
 }
 
 // ===== HARD MODE =====

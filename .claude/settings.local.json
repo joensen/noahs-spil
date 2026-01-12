@@ -8,7 +8,13 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(for hr in 5435 5429 5340 5506 5681 5602 5351 5404 5329)",
+      "Bash(do echo -n \"HR $hr: \")",
+      "Bash(done)",
+      "Bash(python3:*)",
+      "WebFetch(domain:www.astronexus.com)",
+      "WebFetch(domain:in-the-sky.org)"
     ]
   }
 }
