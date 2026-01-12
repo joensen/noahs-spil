@@ -42,6 +42,12 @@ const games = [
         screenshot: "PoliceChase/screenshot.png"
     },
     {
+        title: "Star Map",
+        description: "Connect the stars to discover all 90 constellations in this 3D sky puzzle!",
+        folder: "StarMap",
+        screenshot: "StarMap/screenshot.png"
+    },
+    {
         title: "P2P Snake Battle",
         description: "Multiplayer snake game - no server needed! Connect with a friend and battle to survive!",
         folder: "Snake",

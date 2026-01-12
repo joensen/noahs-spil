@@ -1,0 +1,319 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    cursor: default;
+}
+
+body.selecting {
+    cursor: crosshair;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* HUD Styling */
+#hud {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+#hud.hidden {
+    display: none;
+}
+
+#progress {
+    background: rgba(0, 0, 20, 0.9);
+    border: 2px solid rgba(100, 150, 255, 0.5);
+    border-radius: 10px;
+    padding: 15px 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(100, 150, 255, 0.3);
+}
+
+#progress h3 {
+    font-size: 24px;
+    color: #fff;
+}
+
+#found-count {
+    color: #00ff00;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+#found-list-container {
+    width: 280px;
+    max-height: calc(100vh - 350px);
+    background: rgba(0, 0, 20, 0.9);
+    border: 2px solid rgba(100, 150, 255, 0.5);
+    border-radius: 10px;
+    padding: 15px;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(100, 150, 255, 0.3);
+    pointer-events: all;
+}
+
+#found-list-container h4 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #aaf;
+    text-align: center;
+}
+
+#found-list {
+    margin-top: 10px;
+}
+
+.constellation-entry {
+    padding: 10px;
+    margin: 5px 0;
+    background: rgba(100, 200, 255, 0.2);
+    border-left: 3px solid #00ff00;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: all 0.5s ease;
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+#found-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#found-list-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+#found-list-container::-webkit-scrollbar-thumb {
+    background: rgba(100, 150, 255, 0.5);
+    border-radius: 4px;
+}
+
+#found-list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 150, 255, 0.7);
+}
+
+#button-container {
+    margin-top: 15px;
+    pointer-events: all;
+}
+
+#hard-mode-button, #toggle-names-button, #reset-game-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: rgba(100, 150, 255, 0.3);
+    border: 2px solid rgba(100, 150, 255, 0.5);
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    pointer-events: all;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    width: auto;
+    display: block;
+}
+
+#hard-mode-button {
+    margin-top: 0;
+}
+
+#hard-mode-button:hover, #toggle-names-button:hover, #reset-game-button:hover {
+    background: rgba(100, 150, 255, 0.5);
+    box-shadow: 0 0 15px rgba(100, 150, 255, 0.5);
+}
+
+#hard-mode-button.active {
+    background: rgba(255, 100, 100, 0.4);
+    border-color: rgba(255, 100, 100, 0.6);
+}
+
+/* Credits */
+.hud-credits {
+    margin-top: 15px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    pointer-events: all;
+}
+
+.hud-credits a {
+    color: rgba(100, 150, 255, 0.8);
+    text-decoration: none;
+}
+
+.hud-credits a:hover {
+    color: rgba(100, 150, 255, 1);
+    text-decoration: underline;
+}
+
+.credits {
+    margin: 15px 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.credits a {
+    color: rgba(100, 200, 255, 0.9);
+    text-decoration: none;
+}
+
+.credits a:hover {
+    color: rgba(100, 200, 255, 1);
+    text-decoration: underline;
+}
+
+/* Star Tooltip */
+#star-tooltip {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid rgba(100, 200, 255, 0.6);
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+    box-shadow: 0 0 15px rgba(100, 200, 255, 0.4);
+}
+
+#star-tooltip.hidden {
+    display: none;
+}
+
+/* Overlay Screens */
+.overlay-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+.overlay-screen.hidden {
+    display: none;
+}
+
+.overlay-screen h1 {
+    font-size: 72px;
+    margin-bottom: 30px;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.overlay-screen p {
+    font-size: 24px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.instructions {
+    max-width: 600px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    margin: 20px 0;
+}
+
+.instructions strong {
+    color: #4facfe;
+}
+
+.instructions ul {
+    list-style-position: inside;
+    margin: 15px 0;
+    line-height: 1.8;
+}
+
+button {
+    margin-top: 30px;
+    padding: 18px 50px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+.back-link {
+    margin-top: 20px;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 18px;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #fff;
+}
+
+/* Loading Spinner */
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px 0;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Victory Stats */
+#victory-stats {
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    font-size: 20px;
+}

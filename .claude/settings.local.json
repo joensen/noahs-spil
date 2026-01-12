@@ -4,7 +4,11 @@
       "Bash(dir:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
-      "Bash(node --version)"
+      "Bash(node --version)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl:*)"
     ]
   }
 }

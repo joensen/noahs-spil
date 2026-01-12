@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Map - Noah's Arcade</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Game Container -->
+    <div id="game-container"></div>
+
+    <!-- HUD Overlay -->
+    <div id="hud" class="hidden">
+        <div id="progress">
+            <h3>Found: <span id="found-count">0</span>/90</h3>
+        </div>
+
+        <div id="found-list-container">
+            <h4>Discovered Constellations:</h4>
+            <div id="found-list"></div>
+        </div>
+
+        <div id="button-container">
+            <button id="hard-mode-button">Hard Mode: OFF</button>
+            <button id="toggle-names-button">Star Names: OFF</button>
+            <button id="reset-game-button">Reset Game</button>
+        </div>
+
+        <p class="hud-credits">Data: <a href="https://github.com/mathiasbno/three-starmap" target="_blank" rel="noopener">three-starmap</a></p>
+    </div>
+
+    <!-- Star Name Tooltip -->
+    <div id="star-tooltip" class="hidden"></div>
+
+    <!-- Menu Screen -->
+    <div id="menu-screen" class="overlay-screen">
+        <h1>Star Map</h1>
+        <p>Connect the stars to discover all 90 constellations!</p>
+        <div class="instructions">
+            <p><strong>How to Play:</strong></p>
+            <ul>
+                <li>Click one star, then another to draw a line</li>
+                <li>Correct lines turn green and stay</li>
+                <li>Wrong lines turn red and fade away</li>
+                <li>Complete a constellation to reveal its name</li>
+                <li>Find all 90 constellations to win!</li>
+            </ul>
+            <p><strong>Controls:</strong></p>
+            <ul>
+                <li>Mouse Drag - Rotate view</li>
+                <li>Mouse Wheel - Zoom in/out</li>
+                <li>Click stars to connect them</li>
+            </ul>
+        </div>
+        <p class="credits">Star data from <a href="https://github.com/mathiasbno/three-starmap" target="_blank" rel="noopener">three-starmap</a></p>
+        <button id="start-button">Start Exploring</button>
+        <a href="../" class="back-link">← Back to Games</a>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="overlay-screen hidden">
+        <h1>Congratulations!</h1>
+        <p>You've discovered all 90 constellations!</p>
+        <div id="victory-stats">
+            <p>You are a true celestial navigator!</p>
+        </div>
+        <button id="play-again-button">Play Again</button>
+        <a href="../" class="back-link">← Back to Games</a>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="overlay-screen">
+        <h1>Loading Stars...</h1>
+        <div class="spinner"></div>
+        <p>Mapping the heavens...</p>
+    </div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
