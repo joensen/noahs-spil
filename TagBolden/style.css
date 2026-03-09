@@ -1,0 +1,206 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #1a1a1a;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+#menu, #winner-screen {
+    text-align: center;
+}
+
+#menu h1, #winner-screen h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: #8B4513;
+    text-shadow: 2px 2px 4px #000;
+}
+
+#menu p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: #ccc;
+}
+
+.start-btn {
+    display: block;
+    margin: 0.8rem auto;
+    padding: 1rem 3rem;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: #fff;
+    min-width: 250px;
+}
+
+.start-btn:nth-child(3) {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+}
+
+.start-btn:nth-child(4) {
+    background: linear-gradient(135deg, #e67e22, #f39c12);
+}
+
+.start-btn:nth-child(5) {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+}
+
+#winner-screen .start-btn {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+
+#game-container {
+    text-align: center;
+}
+
+#scoreboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 800px;
+    padding: 0.8rem 1.5rem;
+    background: #2c3e50;
+    border-radius: 12px 12px 0 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+#player-score {
+    color: #2ecc71;
+}
+
+#round-info {
+    color: #f39c12;
+}
+
+#bot-score {
+    color: #e74c3c;
+}
+
+canvas {
+    border: 3px solid #8B4513;
+    border-radius: 0 0 12px 12px;
+    display: block;
+}
+
+#controls-hint {
+    margin-top: 1rem;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.back-link {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    color: #ffc107;
+    text-decoration: none;
+    font-size: 1rem;
+    z-index: 100;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+#winner-screen h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.quit-btn {
+    margin-top: 1rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    transition: background 0.2s;
+}
+
+.quit-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.custom-btn {
+    background: linear-gradient(135deg, #8e44ad, #9b59b6) !important;
+}
+
+#custom-menu {
+    text-align: center;
+}
+
+#custom-menu h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: #9b59b6;
+    text-shadow: 2px 2px 4px #000;
+}
+
+.custom-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.8rem 1.5rem;
+    align-items: center;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+.custom-grid label {
+    text-align: right;
+    font-size: 1.1rem;
+    color: #ccc;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.counter button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: #555;
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.counter button:hover {
+    background: #777;
+}
+
+.counter span {
+    font-size: 1.4rem;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+    color: #f39c12;
+}

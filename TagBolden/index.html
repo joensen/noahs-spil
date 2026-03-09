@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag Bolden!</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="menu">
+        <h1>🪲 Tag Bolden! 🪲</h1>
+        <p>Rul lorten hen til modstanderens mål!</p>
+        <button class="start-btn" onclick="startGame('easy')">Let (Easy)</button>
+        <button class="start-btn" onclick="startGame('normal')">Normal</button>
+        <button class="start-btn" onclick="startGame('hard')">Svær (Hard)</button>
+        <button class="start-btn custom-btn" onclick="showCustom()">Custom</button>
+    </div>
+    <div id="custom-menu" style="display:none;">
+        <h1>Custom Mode</h1>
+        <div class="custom-grid">
+            <label>Angribere</label>
+            <div class="counter">
+                <button onclick="adjustCustom('attackers',-1)">-</button>
+                <span id="c-attackers">1</span>
+                <button onclick="adjustCustom('attackers',1)">+</button>
+            </div>
+            <label>Midtbane</label>
+            <div class="counter">
+                <button onclick="adjustCustom('midfielders',-1)">-</button>
+                <span id="c-midfielders">1</span>
+                <button onclick="adjustCustom('midfielders',1)">+</button>
+            </div>
+            <label>Forsvarere</label>
+            <div class="counter">
+                <button onclick="adjustCustom('defenders',-1)">-</button>
+                <span id="c-defenders">1</span>
+                <button onclick="adjustCustom('defenders',1)">+</button>
+            </div>
+            <label>Super spark cooldown (sek)</label>
+            <div class="counter">
+                <button onclick="adjustCustom('cooldown',-1)">-</button>
+                <span id="c-cooldown">5</span>
+                <button onclick="adjustCustom('cooldown',1)">+</button>
+            </div>
+            <label>Spil til (mål)</label>
+            <div class="counter">
+                <button onclick="adjustCustom('goals',-1)">-</button>
+                <span id="c-goals">3</span>
+                <button onclick="adjustCustom('goals',1)">+</button>
+            </div>
+        </div>
+        <button class="start-btn" onclick="startCustomGame()" style="margin-top:1.5rem;">Start!</button>
+        <button class="quit-btn" onclick="hideCustom()" style="margin-top:0.5rem;">← Tilbage</button>
+    </div>
+    <div id="game-container" style="display:none;">
+        <div id="scoreboard">
+            <span id="player-score">Dig: 0</span>
+            <span id="round-info">Runde 1</span>
+            <span id="bot-score">Robot: 0</span>
+        </div>
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <p id="controls-hint">Piletaster/WASD = bevæg | MELLEMRUM = super spark (5 sek cooldown)</p>
+        <button class="quit-btn" onclick="backToMenu()">← Tilbage til menu</button>
+    </div>
+    <div id="winner-screen" style="display:none;">
+        <h1 id="winner-text"></h1>
+        <button class="start-btn" onclick="backToMenu()">Spil igen</button>
+    </div>
+    <a href="../" class="back-link">← Tilbage til spil</a>
+    <script src="script.js"></script>
+</body>
+</html>

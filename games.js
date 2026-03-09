@@ -52,6 +52,12 @@ const games = [
         description: "Multiplayer snake game - no server needed! Connect with a friend and battle to survive!",
         folder: "Snake",
         screenshot: "Snake/screenshot.png"
+    },
+    {
+        title: "Tag Bolden!",
+        description: "Rul lorten i mål! Styr din skarnbasse og scor mod robotten. Vælg mellem let, normal og svær!",
+        folder: "TagBolden",
+        screenshot: "TagBolden/screenshot.png"
     }
 ];
 
