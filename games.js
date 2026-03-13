@@ -58,6 +58,18 @@ const games = [
         description: "Rul lorten i mål! Styr din skarnbasse og scor mod robotten. Vælg mellem let, normal og svær!",
         folder: "TagBolden",
         screenshot: "TagBolden/screenshot.png"
+    },
+    {
+        title: "Skak",
+        description: "Spil skak mod en ven! Komplet med rokade, en passant og bondeforvandling.",
+        folder: "Chess",
+        screenshot: "Chess/screenshot.png"
+    },
+    {
+        title: "Back Stab",
+        description: "Glid baglæns og stik din modstander i ryggen! Tryk Shift for at glide, Mellemrum for at stikke!",
+        folder: "BackStab",
+        screenshot: "BackStab/screenshot.png"
     }
 ];
 

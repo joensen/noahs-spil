@@ -1,0 +1,71 @@
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #eee;
+}
+
+canvas {
+    border: 2px solid #e94560;
+    border-radius: 8px;
+    background: #16213e;
+    margin-bottom: 20px;
+}
+
+#ui {
+    text-align: center;
+}
+
+h1 {
+    font-size: 2rem;
+    color: #e94560;
+    margin-bottom: 10px;
+}
+
+#instructions {
+    font-size: 0.95rem;
+    color: #aaa;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+kbd {
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.9rem;
+    color: #e94560;
+}
+
+#message {
+    font-size: 1.4rem;
+    font-weight: bold;
+    min-height: 2rem;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px 30px;
+    font-size: 1.1rem;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #c23152;
+}
