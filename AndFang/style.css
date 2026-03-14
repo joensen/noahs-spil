@@ -1,0 +1,265 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    display: none;
+}
+
+canvas {
+    border: 3px solid #e94560;
+    border-radius: 10px;
+    background: #87CEEB;
+    display: block;
+}
+
+#ui-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+#money-display, #timer-display, #total-money-display {
+    background: rgba(0, 0, 0, 0.7);
+    color: #FFD700;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#timer-display {
+    color: #ff6b6b;
+}
+
+#total-money-display {
+    color: #7bed9f;
+}
+
+#cooldown-display {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: #7bed9f;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+#shop-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #e94560;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+#shop-btn:hover {
+    transform: scale(1.1);
+    background: #c73a52;
+}
+
+/* Start / End screens */
+#start-screen, #end-screen, #shop-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(26, 26, 46, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 100;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+#start-screen h1, #end-screen h1, #shop-screen h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #FFD700;
+}
+
+#start-screen p, #end-screen p {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #ddd;
+}
+
+button {
+    background: #e94560;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 22px;
+    border-radius: 30px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: transform 0.2s, background 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: #c73a52;
+}
+
+/* Shop pages */
+#shop-pages {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.page-btn {
+    padding: 10px 25px;
+    font-size: 18px;
+    margin-top: 0;
+    background: #333;
+    border: 2px solid #555;
+}
+
+.page-btn:hover {
+    background: #444;
+}
+
+.page-btn.active-page {
+    background: #e94560;
+    border-color: #e94560;
+}
+
+/* Shop */
+#shop-money {
+    font-size: 24px;
+    color: #FFD700;
+    margin-bottom: 20px;
+}
+
+#skins-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 650px;
+    margin-bottom: 20px;
+}
+
+.skin-card {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.skin-card:hover {
+    transform: scale(1.05);
+    border-color: #e94560;
+}
+
+.skin-card.owned {
+    border-color: #7bed9f;
+}
+
+.skin-card.active {
+    border-color: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+/* OP skin cards */
+.skin-card.op-card {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.2), rgba(233, 69, 96, 0.2));
+    border-color: #9b59b6;
+}
+
+.skin-card.op-card:hover {
+    border-color: #e94560;
+    box-shadow: 0 0 20px rgba(155, 89, 182, 0.4);
+}
+
+.skin-card.op-card.owned {
+    border-color: #7bed9f;
+}
+
+.skin-card.op-card.active {
+    border-color: #FFD700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+.skin-preview {
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+.skin-name {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.skin-price {
+    color: #FFD700;
+    font-size: 14px;
+}
+
+.skin-status {
+    color: #7bed9f;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.locked-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 22px;
+    color: #ff6b6b;
+    padding: 40px 20px;
+    background: rgba(255, 0, 0, 0.1);
+    border: 2px dashed #ff6b6b;
+    border-radius: 15px;
+}
+
+.reset-btn {
+    background: #555;
+    font-size: 16px;
+    padding: 10px 25px;
+}
+
+.reset-btn:hover {
+    background: #ff0000;
+}
+
+.skin-power {
+    color: #dda0dd;
+    font-size: 12px;
+    margin-top: 5px;
+    font-style: italic;
+}

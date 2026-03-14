@@ -70,6 +70,12 @@ const games = [
         description: "Glid baglæns og stik din modstander i ryggen! Tryk Shift for at glide, Mellemrum for at stikke!",
         folder: "BackStab",
         screenshot: "BackStab/screenshot.png"
+    },
+    {
+        title: "And Fang",
+        description: "Styr en and og fang mønter! Undvig nettet og køb fede skins i shoppen!",
+        folder: "AndFang",
+        screenshot: "AndFang/screenshot.png"
     }
 ];
 

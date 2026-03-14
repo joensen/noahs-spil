@@ -15,7 +15,12 @@
       "Bash(python3:*)",
       "WebFetch(domain:www.astronexus.com)",
       "WebFetch(domain:in-the-sky.org)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(node -e \"require\\(''canvas''\\)\")",
+      "Bash(npm install:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh auth:*)",
+      "Bash(git add:*)"
     ]
   }
 }

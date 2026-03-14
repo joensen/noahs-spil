@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>And Fang</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div id="ui-overlay">
+            <div id="money-display">🪙 <span id="money-count">0</span></div>
+            <div id="timer-display">⏱️ <span id="timer">60</span>s</div>
+            <div id="total-money-display">💰 Total: <span id="total-money">0</span></div>
+        </div>
+        <div id="cooldown-display" style="display:none;"></div>
+        <div id="shop-btn" onclick="toggleShop()">🛒 Shop</div>
+    </div>
+
+    <div id="start-screen">
+        <h1>🦆 And Fang</h1>
+        <p>Fang så mange mønter som muligt!</p>
+        <p>Undvig nettet - det tager ALLE dine runde-mønter!</p>
+        <p>Brug <strong>piletasterne</strong> eller <strong>WASD</strong> til at styre anden</p>
+        <button onclick="startGame()">Start Spil</button>
+        <button class="reset-btn" onclick="resetAll()">Start Forfra</button>
+    </div>
+
+    <div id="end-screen" style="display:none;">
+        <h1>Tiden er gået!</h1>
+        <p>Du fangede <span id="round-result">0</span> mønter denne runde!</p>
+        <p>Total mønter: <span id="end-total">0</span></p>
+        <button onclick="startGame()">Spil Igen</button>
+        <button onclick="toggleShop()">🛒 Shop</button>
+    </div>
+
+    <div id="shop-screen" style="display:none;">
+        <h1>🛒 Shop</h1>
+        <div id="shop-money">💰 Dine mønter: <span id="shop-money-count">0</span></div>
+        <div id="shop-pages">
+            <button id="page1-btn" class="page-btn active-page" onclick="switchShopPage(1)">Skins</button>
+            <button id="page2-btn" class="page-btn" onclick="switchShopPage(2)">⚡ OP Skins</button>
+        </div>
+        <div id="skins-grid"></div>
+        <button onclick="toggleShop()">Luk Shop</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

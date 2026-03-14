@@ -66,3 +66,7 @@ The [games.js](games.js) file uses `DOMContentLoaded` event listener to dynamica
 
 ### Asset Paths
 Screenshot and folder paths in [games.js](games.js) are relative to the root directory. Games are accessed by navigating to `{folder}/` which loads `{folder}/index.html`.
+
+## Kommandoer
+
+- Når brugeren skriver **"udgiv"**, skal alle ændringer stages (`git add`), committes (`git commit`) og pushes (`git push`).

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a2e; }
+canvas { border-radius: 10px; }
+</style>
+</head>
+<body>
+<canvas id="c" width="800" height="500"></canvas>
+<script>
+const ctx = document.getElementById('c').getContext('2d');
+// Sky
+const grad = ctx.createLinearGradient(0,0,0,500);
+grad.addColorStop(0,'#87CEEB');
+grad.addColorStop(0.7,'#98D8C8');
+grad.addColorStop(1,'#6BCB77');
+ctx.fillStyle = grad;
+ctx.fillRect(0,0,800,500);
+// Pond
+ctx.fillStyle = 'rgba(70,130,180,0.4)';
+ctx.beginPath();
+ctx.ellipse(400,450,350,60,0,0,Math.PI*2);
+ctx.fill();
+// Coins
+ctx.font = '24px serif';
+ctx.textAlign = 'center';
+['🪙'].forEach(e => {
+    [[200,150],[500,200],[650,350],[150,300],[400,100]].forEach(([x,y]) => {
+        ctx.fillText(e, x, y);
+    });
+});
+// Net
+ctx.font = '44px serif';
+ctx.fillText('🥅', 550, 280);
+// Duck
+ctx.font = '48px serif';
+ctx.fillText('🦆', 350, 300);
+// Title
+ctx.font = 'bold 36px sans-serif';
+ctx.fillStyle = '#1a1a2e';
+ctx.fillText('And Fang', 400, 60);
+</script>
+</body>
+</html>
