@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a0a2e"/>
+      <stop offset="100%" style="stop-color:#2d1b69"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <text x="400" y="180" text-anchor="middle" font-size="80" fill="white">🧠🚽💀</text>
+  <text x="400" y="270" text-anchor="middle" font-family="Arial" font-size="48" font-weight="bold" fill="#ff00ff">Brainrot Navne</text>
+  <text x="400" y="330" text-anchor="middle" font-family="Arial" font-size="28" fill="#ffd700">Klik og bliv rig!</text>
+</svg>

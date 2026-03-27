@@ -76,6 +76,12 @@ const games = [
         description: "Styr en and og fang mønter! Undvig nettet og køb fede skins i shoppen!",
         folder: "AndFang",
         screenshot: "AndFang/screenshot.png"
+    },
+    {
+        title: "Brainrot Navne",
+        description: "Klik på brainrots og tjen kr! Køb flere brainrots og bliv rig! 🧠🚽",
+        folder: "BrainrotNavne",
+        screenshot: "BrainrotNavne/screenshot.svg"
     }
 ];
 
