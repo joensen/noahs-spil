@@ -82,6 +82,12 @@ const games = [
         description: "Klik på brainrots og tjen kr! Køb flere brainrots og bliv rig! 🧠🚽",
         folder: "BrainrotNavne",
         screenshot: "BrainrotNavne/screenshot.svg"
+    },
+    {
+        title: "Miner",
+        description: "Byg og ødelæg blokke i en 3D Minecraft-lignende verden! WASD + mus for at bevæge dig.",
+        folder: "Miner",
+        screenshot: "Miner/screenshot.png"
     }
 ];
 

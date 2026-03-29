@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miner - Noah's Arcade</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <div id="crosshair">+</div>
+
+    <div id="toolbar"></div>
+
+    <div id="interaction-hint"></div>
+    <div id="message-display"></div>
+
+    <div id="crafting-screen">
+        <h2>Crafting</h2>
+        <div id="recipe-list"></div>
+        <button id="crafting-close">Luk (E)</button>
+    </div>
+
+    <div id="menu-screen" class="overlay-screen">
+        <a href="../index.html" id="back-button">&larr; Tilbage</a>
+        <h1>Miner</h1>
+        <p>Overlev og byg i en 3D-verden!</p>
+        <div class="instructions">
+            <p><strong>Kontroller:</strong></p>
+            <p>WASD - Bevæg dig | Mellemrum - Hop</p>
+            <p>Mus - Kig rundt | ESC - Slip mus</p>
+            <p>Venstre klik - Ødelæg blok | Højre klik - Placer blok</p>
+            <p>1-9 - Vælg plads i toolbar</p>
+            <p>E - Åbn crafting (stå ved arbejdsbord for alle opskrifter)</p>
+        </div>
+        <button id="start-button">Klik for at spille</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
