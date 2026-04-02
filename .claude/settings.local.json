@@ -26,7 +26,10 @@
       "Bash(grep -v '^\\\\.$')",
       "Bash(cd:*)",
       "Bash(cp -r MineNoah Miner)",
-      "Bash(rm -rf MineNoah)"
+      "Bash(rm -rf MineNoah)",
+      "Bash(node:*)",
+      "WebFetch(domain:www.fifaratings.com)",
+      "WebFetch(domain:www.givemesport.com)"
     ]
   }
 }

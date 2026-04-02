@@ -88,6 +88,12 @@ const games = [
         description: "Byg og ødelæg blokke i en 3D Minecraft-lignende verden! WASD + mus for at bevæge dig.",
         folder: "Miner",
         screenshot: "Miner/screenshot.png"
+    },
+    {
+        title: "Ultimate Team",
+        description: "Åbn pakker med fodboldspillere, byg dit drømmehold og spil kamp mod computeren!",
+        folder: "UltimateTeam",
+        screenshot: ""
     }
 ];
 

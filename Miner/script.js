@@ -10,6 +10,8 @@ const RENDER_DISTANCE = 6;       // chunks
 const CHUNKS_PER_FRAME = 2;      // max chunks to generate+mesh per frame
 const PLAYER_HEIGHT = 1.6;
 const MOVE_SPEED = 5;
+const SPRINT_SPEED = 8.5;
+const DOUBLE_TAP_TIME = 300; // ms
 const GRAVITY = 20;
 const JUMP_VELOCITY = 8;
 const PI_2 = Math.PI / 2;
@@ -41,6 +43,8 @@ let craftingOpen = false;
 const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const velocity = new THREE.Vector3();
 const movement = { forward: false, backward: false, left: false, right: false, canJump: true };
+let isSprinting = false;
+let lastWTap = 0;
 const direction = new THREE.Vector3();
 
 // World data: key "x,y,z" -> block type string
@@ -90,6 +94,12 @@ let selectedSlot = 0;
 
 // Message system
 let messageTimer = null;
+
+// Day/Night cycle
+const DAY_CYCLE_DURATION = 600; // 10 minutes in seconds
+let gameTime = 0.25; // 0..1 where 0=dawn, 0.25=noon, 0.5=dusk, 0.75=midnight (start at noon)
+let ambientLight = null;
+let dirLight = null;
 
 // Timing
 let lastTime = 0;
@@ -1165,6 +1175,7 @@ function updatePlayerMovement(delta) {
     direction.x = Number(movement.right) - Number(movement.left);
     direction.normalize();
 
+    const speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
     const moveVector = new THREE.Vector3();
 
     if (movement.forward || movement.backward) {
@@ -1172,7 +1183,7 @@ function updatePlayerMovement(delta) {
         forward.applyQuaternion(camera.quaternion);
         forward.y = 0;
         forward.normalize();
-        moveVector.add(forward.multiplyScalar(direction.z * MOVE_SPEED * delta));
+        moveVector.add(forward.multiplyScalar(direction.z * speed * delta));
     }
 
     if (movement.left || movement.right) {
@@ -1180,7 +1191,7 @@ function updatePlayerMovement(delta) {
         right.applyQuaternion(camera.quaternion);
         right.y = 0;
         right.normalize();
-        moveVector.add(right.multiplyScalar(direction.x * MOVE_SPEED * delta));
+        moveVector.add(right.multiplyScalar(direction.x * speed * delta));
     }
 
     const eyeY = camera.position.y;
@@ -1344,6 +1355,8 @@ function onPointerLockChange() {
         if (gameStarted && !craftingOpen) {
             document.getElementById('menu-screen').style.display = 'flex';
             document.getElementById('start-button').textContent = 'Klik for at fortsætte';
+            document.getElementById('save-load-buttons').style.display = 'flex';
+            document.getElementById('load-button-start').style.display = 'none';
         }
     }
 }
@@ -1390,7 +1403,16 @@ function onKeyDown(event) {
     }
 
     switch (event.code) {
-        case 'KeyW': movement.forward = true; break;
+        case 'KeyW':
+            if (!movement.forward) {
+                const now = performance.now();
+                if (now - lastWTap < DOUBLE_TAP_TIME) {
+                    isSprinting = true;
+                }
+                lastWTap = now;
+            }
+            movement.forward = true;
+            break;
         case 'KeyS': movement.backward = true; break;
         case 'KeyA': movement.left = true; break;
         case 'KeyD': movement.right = true; break;
@@ -1412,7 +1434,7 @@ function onKeyDown(event) {
 
 function onKeyUp(event) {
     switch (event.code) {
-        case 'KeyW': movement.forward = false; break;
+        case 'KeyW': movement.forward = false; isSprinting = false; break;
         case 'KeyS': movement.backward = false; break;
         case 'KeyA': movement.left = false; break;
         case 'KeyD': movement.right = false; break;
@@ -1678,8 +1700,263 @@ function showMessage(text) {
     }, 2000);
 }
 
+// ===== SAVE / LOAD (IndexedDB) =====
+const DB_NAME = 'miner_db';
+const DB_VERSION = 1;
+const STORE_NAME = 'saves';
+const SAVE_KEY = 'main';
+const AUTO_SAVE_INTERVAL = 60; // seconds
+let autoSaveTimer = 0;
+let saveDbReady = false;
+let saveDb = null;
+
+function openSaveDb() {
+    return new Promise((resolve, reject) => {
+        if (saveDb) { resolve(saveDb); return; }
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+        req.onsuccess = (e) => {
+            saveDb = e.target.result;
+            saveDbReady = true;
+            resolve(saveDb);
+        };
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function buildSaveData() {
+    return {
+        version: 1,
+        player: {
+            x: camera.position.x,
+            y: camera.position.y,
+            z: camera.position.z,
+            rotX: euler.x,
+            rotY: euler.y,
+        },
+        gameTime: gameTime,
+        inventory: { ...inventory },
+        toolInventory: toolInventory.map(t => t ? { id: t.id, durability: t.durability } : null),
+        toolbar: toolbar.map(s => s ? { ...s } : null),
+        selectedSlot: selectedSlot,
+        world: { ...world },
+        generatedChunks: Array.from(generatedChunks),
+    };
+}
+
+async function saveGame() {
+    try {
+        const db = await openSaveDb();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.put(buildSaveData(), SAVE_KEY);
+        return new Promise((resolve) => {
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => { console.error('Gem fejlede:', tx.error); resolve(false); };
+        });
+    } catch (e) {
+        console.error('Gem fejlede:', e);
+        return false;
+    }
+}
+
+async function loadGame() {
+    try {
+        const db = await openSaveDb();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.get(SAVE_KEY);
+        return new Promise((resolve) => {
+            req.onsuccess = () => {
+                const saveData = req.result;
+                if (!saveData || saveData.version !== 1) { resolve(false); return; }
+                applySaveData(saveData);
+                resolve(true);
+            };
+            req.onerror = () => { console.error('Indlæs fejlede:', req.error); resolve(false); };
+        });
+    } catch (e) {
+        console.error('Indlæs fejlede:', e);
+        return false;
+    }
+}
+
+function applySaveData(saveData) {
+    // Clear current world state
+    for (const key in world) delete world[key];
+    generatedChunks.clear();
+
+    // Unload all chunk meshes
+    for (const key in chunks) {
+        const [cx, cz] = key.split(',').map(Number);
+        removeChunkMeshes(cx, cz);
+    }
+
+    // Restore world blocks
+    for (const key in saveData.world) {
+        world[key] = saveData.world[key];
+    }
+
+    // Restore generated chunks set
+    for (const key of saveData.generatedChunks) {
+        generatedChunks.add(key);
+    }
+
+    // Restore player
+    camera.position.set(saveData.player.x, saveData.player.y, saveData.player.z);
+    euler.x = saveData.player.rotX;
+    euler.y = saveData.player.rotY;
+    camera.quaternion.setFromEuler(euler);
+    velocity.set(0, 0, 0);
+
+    // Restore game time
+    gameTime = saveData.gameTime || 0.25;
+
+    // Restore inventory
+    for (const key in inventory) delete inventory[key];
+    for (const key in saveData.inventory) {
+        inventory[key] = saveData.inventory[key];
+    }
+
+    // Restore tool inventory
+    toolInventory.length = 0;
+    if (saveData.toolInventory) {
+        for (const t of saveData.toolInventory) {
+            toolInventory.push(t ? { id: t.id, durability: t.durability } : null);
+        }
+    }
+
+    // Restore toolbar
+    for (let i = 0; i < TOOLBAR_SLOTS; i++) {
+        toolbar[i] = saveData.toolbar[i] || null;
+    }
+    if (!toolbar[0]) toolbar[0] = { type: 'tool', item: 'hand' };
+    selectedSlot = saveData.selectedSlot || 0;
+
+    // Force chunk reload
+    lastPlayerChunkX = null;
+    lastPlayerChunkZ = null;
+
+    // Build meshes for chunks near player
+    const pcx = worldToChunk(camera.position.x);
+    const pcz = worldToChunk(camera.position.z);
+    for (let dx = -2; dx <= 2; dx++) {
+        for (let dz = -2; dz <= 2; dz++) {
+            const cx = pcx + dx;
+            const cz = pcz + dz;
+            const key = chunkKey(cx, cz);
+            if (generatedChunks.has(key)) {
+                buildChunkMeshes(cx, cz);
+            }
+        }
+    }
+
+    renderToolbar();
+}
+
+async function hasSaveGame() {
+    try {
+        const db = await openSaveDb();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.count(SAVE_KEY);
+        return new Promise((resolve) => {
+            req.onsuccess = () => resolve(req.result > 0);
+            req.onerror = () => resolve(false);
+        });
+    } catch (e) {
+        return false;
+    }
+}
+
+async function deleteSaveGame() {
+    try {
+        const db = await openSaveDb();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.delete(SAVE_KEY);
+    } catch (e) {
+        console.error('Slet fejlede:', e);
+    }
+}
+
+// ===== DAY/NIGHT CYCLE =====
+function updateDayNightCycle(delta) {
+    gameTime += delta / DAY_CYCLE_DURATION;
+    if (gameTime >= 1) gameTime -= 1;
+
+    // Sun angle: 0 at dawn, PI/2 at noon, PI at dusk, 3PI/2 at midnight
+    const sunAngle = gameTime * Math.PI * 2;
+
+    // Light intensity based on sun position
+    // sinFactor: 1 at noon, -1 at midnight
+    const sinFactor = Math.sin(sunAngle);
+
+    // Ambient: 0.15 at midnight, 0.6 at noon
+    const ambientIntensity = THREE.MathUtils.clamp(0.15 + 0.45 * sinFactor, 0.15, 0.6);
+    ambientLight.intensity = ambientIntensity;
+
+    // Directional (sun): 0 at night, 0.8 at noon
+    const sunIntensity = THREE.MathUtils.clamp(sinFactor * 0.8, 0, 0.8);
+    dirLight.intensity = sunIntensity;
+
+    // Move sun position
+    const sunX = Math.cos(sunAngle) * 50;
+    const sunY = Math.sin(sunAngle) * 50;
+    dirLight.position.set(sunX, sunY, 20);
+
+    // Sky color: blend between day sky and night sky
+    const dayColor = new THREE.Color(0x87CEEB);
+    const duskColor = new THREE.Color(0xFF7744);
+    const nightColor = new THREE.Color(0x0a0a2a);
+
+    let skyColor;
+    if (sinFactor > 0.2) {
+        // Day
+        skyColor = dayColor;
+    } else if (sinFactor > -0.1) {
+        // Dusk/dawn transition
+        const t = (sinFactor - (-0.1)) / 0.3; // 0..1
+        skyColor = nightColor.clone().lerp(duskColor, t * 0.5);
+        skyColor.lerp(dayColor, Math.max(0, (t - 0.3) / 0.7));
+    } else {
+        // Night
+        const t = THREE.MathUtils.clamp((sinFactor + 1) / 0.9, 0, 1);
+        skyColor = nightColor;
+    }
+
+    scene.background = skyColor;
+    scene.fog.color = skyColor;
+
+    // Tint ambient light: warm at dawn/dusk, cool at night, white at day
+    if (sinFactor > 0.2) {
+        ambientLight.color.setHex(0xffffff);
+        dirLight.color.setHex(0xffffff);
+    } else if (sinFactor > -0.1) {
+        ambientLight.color.set(0xffddaa);
+        dirLight.color.set(0xff9955);
+    } else {
+        ambientLight.color.set(0x8888cc);
+    }
+}
+
+function getTimeOfDayString() {
+    // Returns a Danish string for the current time of day
+    const hour = Math.floor(gameTime * 24);
+    const min = Math.floor((gameTime * 24 - hour) * 60);
+    return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+}
+
 // ===== INIT =====
 function init() {
+    // Pre-open IndexedDB for save/load
+    openSaveDb().catch(() => {});
+
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
     scene.fog = new THREE.Fog(0x87CEEB, 40, 120);
@@ -1691,10 +1968,10 @@ function init() {
     renderer.setPixelRatio(window.devicePixelRatio);
     document.getElementById('game-container').appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
     dirLight.position.set(30, 50, 20);
     scene.add(dirLight);
 
@@ -1737,18 +2014,53 @@ function init() {
 
     window.addEventListener('beforeunload', (e) => {
         if (gameStarted) {
+            // Fire-and-forget save attempt (auto-save covers most cases)
+            saveGame();
             e.preventDefault();
         }
     });
 
     document.getElementById('crafting-close').addEventListener('click', closeCrafting);
 
-    document.getElementById('start-button').addEventListener('click', () => {
+    // Show load button on start screen if save exists
+    hasSaveGame().then(exists => {
+        if (exists) {
+            document.getElementById('load-button-start').style.display = 'inline-block';
+        }
+    });
+
+    function startGame() {
         document.body.requestPointerLock();
         document.getElementById('menu-screen').style.display = 'none';
         document.getElementById('crosshair').style.display = 'block';
         document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('time-display').style.display = 'block';
         gameStarted = true;
+    }
+
+    document.getElementById('start-button').addEventListener('click', startGame);
+
+    document.getElementById('load-button-start').addEventListener('click', async () => {
+        if (await loadGame()) {
+            showMessage('Spil indlæst!');
+        }
+        startGame();
+    });
+
+    document.getElementById('save-button').addEventListener('click', async () => {
+        const ok = await saveGame();
+        showMessage(ok ? 'Spil gemt!' : 'Gem fejlede!');
+    });
+
+    document.getElementById('load-button').addEventListener('click', async () => {
+        const ok = await loadGame();
+        showMessage(ok ? 'Spil indlæst!' : 'Ingen gemte data fundet!');
+    });
+
+    document.getElementById('delete-save-button').addEventListener('click', async () => {
+        await deleteSaveGame();
+        showMessage('Gemte data slettet!');
+        document.getElementById('save-load-buttons').style.display = 'none';
     });
 
     renderer.render(scene, camera);
@@ -1766,6 +2078,26 @@ function animate(currentTime) {
         updatePlayerMovement(delta);
         updateTarget();
     }
+
+    // Day/night cycle
+    if (gameStarted) {
+        updateDayNightCycle(delta);
+        document.getElementById('time-display').textContent = getTimeOfDayString();
+    }
+
+    // Auto-save
+    if (gameStarted) {
+        autoSaveTimer += delta;
+        if (autoSaveTimer >= AUTO_SAVE_INTERVAL) {
+            autoSaveTimer = 0;
+            saveGame();
+        }
+    }
+
+    // Sprint FOV effect
+    const targetFov = isSprinting ? 82 : 75;
+    camera.fov += (targetFov - camera.fov) * Math.min(1, delta * 8);
+    camera.updateProjectionMatrix();
 
     // Progressive chunk loading
     updateChunks();

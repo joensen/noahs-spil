@@ -71,8 +71,10 @@ Display a 10-drumstick hunger bar alongside health. Hunger drains slowly over ti
 
 **Dependencies:** Health Bar (hunger interacts with health regeneration and damage).
 
-## 10. Day/Night Cycle & Lighting
+## ✅ 10. Day/Night Cycle & Lighting
 Implement a game clock that cycles through day and night over ~10 minutes. Ambient light dims at night and brightens at dawn. Block faces are shaded based on sunlight level. This creates atmosphere and sets the stage for hostile mobs.
+
+**Status:** Implemented — 10-minute day/night cycle with smooth ambient/directional light transitions, sky color changes (day blue → dusk orange → night dark), sun position movement, and HUD clock display. Game starts at noon.
 
 **Dependencies:** None — modifies the renderer's ambient light based on a timer.
 
@@ -131,10 +133,19 @@ Divide the world into 16x16 chunks that load/unload as the player moves. Generat
 
 **Dependencies:** Terrain Generation Improvements (chunk generator must use noise-based terrain), Biomes (new chunks need biome assignment).
 
-## 22. Save / Load Game
+## ✅ 22. Save / Load Game
 Serialize the world state (blocks, player position/inventory/health/hunger, time of day, chest contents, mob positions) to localStorage or IndexedDB. Add save/load buttons to the pause menu. Auto-save periodically. Allows players to keep progress across sessions.
 
+**Status:** Implemented — Full save/load to localStorage with world blocks, player position/rotation, inventory, tool inventory, toolbar, game time, and generated chunks. Save/load/delete buttons on pause menu, load button on start screen when save exists. Auto-saves every 60 seconds and on page unload.
+
 **Dependencies:** Chunk Loading (must serialize chunk data efficiently), Hunger Bar & Health Bar (must persist player stats).
+
+## ✅ 24. Sprinting
+Double-tap W to sprint, moving at 1.7× normal speed. Sprinting stops when W is released. A slight FOV increase provides visual feedback while sprinting.
+
+**Status:** Implemented — Double-tap W within 300ms to sprint (8.5 vs 5 move speed). FOV smoothly widens from 75 to 82 while sprinting.
+
+**Dependencies:** None.
 
 ## 23. Creative Mode Toggle
 Add a toggle in the pause menu or a `/gamemode` command to switch between survival and creative. Creative mode gives unlimited blocks, instant breaking, flight (double-tap jump), no health/hunger, and access to all block types via a creative inventory grid.

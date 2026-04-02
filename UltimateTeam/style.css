@@ -1,0 +1,500 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0a1628;
+    color: #fff;
+    font-family: 'Roboto', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+#game-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.screen.active {
+    display: flex;
+}
+
+h1 {
+    font-family: 'Russo One', sans-serif;
+    font-size: 3.5em;
+    background: linear-gradient(135deg, #f5c518, #ff6b35);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    margin-top: 60px;
+}
+
+h2 {
+    font-family: 'Russo One', sans-serif;
+    font-size: 2em;
+    color: #f5c518;
+    text-align: center;
+}
+
+.sub {
+    color: #8899aa;
+    text-align: center;
+}
+
+.intro-text {
+    text-align: center;
+    font-size: 1.2em;
+    color: #aabbcc;
+    line-height: 2;
+    margin: 20px 0;
+}
+
+.btn-main {
+    background: linear-gradient(135deg, #f5c518, #ff6b35);
+    color: #0a1628;
+    border: none;
+    padding: 16px 48px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.3em;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-main:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(245, 197, 24, 0.5);
+}
+
+.btn-main.hidden {
+    display: none;
+}
+
+/* Pack Opening */
+#pack-header {
+    text-align: center;
+}
+
+#pack-info {
+    color: #8899aa;
+    margin-top: 8px;
+}
+
+#pack-area {
+    perspective: 800px;
+    margin: 20px 0;
+}
+
+#pack-box {
+    width: 220px;
+    height: 300px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1a2d4a, #2a4a6a);
+    border: 3px solid #f5c518;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+#pack-box:hover {
+    transform: rotateY(5deg) scale(1.03);
+    box-shadow: 0 0 40px rgba(245, 197, 24, 0.4);
+}
+
+#pack-box.opened {
+    pointer-events: none;
+    opacity: 0.4;
+    transform: scale(0.9);
+}
+
+.pack-front {
+    text-align: center;
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.1em;
+    color: #f5c518;
+    z-index: 2;
+}
+
+.pack-glow {
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(245, 197, 24, 0.15) 0%, transparent 70%);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 1; }
+}
+
+/* Player Cards */
+#pack-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    min-height: 50px;
+}
+
+.player-card {
+    width: 150px;
+    border-radius: 12px;
+    padding: 10px 8px 8px;
+    text-align: center;
+    position: relative;
+    cursor: default;
+    transition: transform 0.3s, box-shadow 0.3s;
+    animation: cardReveal 0.5s ease-out;
+    border: 2px solid;
+    overflow: hidden;
+}
+
+.player-card:hover {
+    transform: translateY(-5px);
+}
+
+@keyframes cardReveal {
+    from { transform: scale(0) rotateY(180deg); opacity: 0; }
+    to { transform: scale(1) rotateY(0); opacity: 1; }
+}
+
+.player-card.bronze {
+    background: linear-gradient(135deg, #5c3d2e, #8b6f47);
+    border-color: #a07850;
+}
+
+.player-card.silver {
+    background: linear-gradient(135deg, #4a5568, #718096);
+    border-color: #a0aec0;
+}
+
+.player-card.gold {
+    background: linear-gradient(135deg, #744210, #d69e2e);
+    border-color: #f5c518;
+}
+
+.player-card.special {
+    background: linear-gradient(135deg, #1a0533, #6b21a8);
+    border-color: #a855f7;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+.card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.card-top-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 40px;
+}
+
+.card-rating {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.6em;
+    line-height: 1;
+}
+
+.card-position {
+    font-size: 0.7em;
+    font-weight: bold;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+.card-flag {
+    width: 28px;
+    height: 20px;
+    object-fit: cover;
+    border-radius: 2px;
+    margin-top: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.card-avatar {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    margin-left: auto;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.card-name {
+    font-weight: bold;
+    font-size: 0.85em;
+    margin: 4px 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding-top: 4px;
+}
+
+.card-club {
+    font-size: 0.65em;
+    opacity: 0.7;
+}
+
+.card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    font-size: 0.6em;
+    margin-top: 5px;
+    opacity: 0.9;
+}
+
+.card-stats span {
+    background: rgba(0,0,0,0.25);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Team Selection */
+#team-selected-count {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.3em;
+    color: #f5c518;
+}
+
+#player-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+#player-pool .player-card {
+    cursor: pointer;
+}
+
+#player-pool .player-card.selected {
+    box-shadow: 0 0 20px rgba(72, 255, 72, 0.6);
+    border-color: #48ff48 !important;
+    transform: translateY(-8px);
+}
+
+/* Tactic Screen */
+#your-team-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 700px;
+}
+
+.mini-card {
+    background: linear-gradient(135deg, #1a2d4a, #2a4a6a);
+    border: 1px solid #4a6a8a;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.8em;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.mc-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.mc-flag {
+    width: 20px;
+    height: 14px;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+.mini-card .mc-rating {
+    font-family: 'Russo One', sans-serif;
+    color: #f5c518;
+}
+
+#tactic-buttons {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-tactic {
+    background: linear-gradient(135deg, #1a2d4a, #2a4a6a);
+    border: 2px solid #4a6a8a;
+    color: #fff;
+    padding: 24px 20px;
+    border-radius: 16px;
+    cursor: pointer;
+    width: 200px;
+    text-align: center;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-tactic:hover {
+    border-color: #f5c518;
+    box-shadow: 0 0 30px rgba(245, 197, 24, 0.3);
+    transform: translateY(-5px);
+}
+
+.tactic-icon {
+    font-size: 2.5em;
+}
+
+.tactic-name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.2em;
+    color: #f5c518;
+}
+
+.tactic-desc {
+    font-size: 0.8em;
+    color: #8899aa;
+}
+
+/* Match Screen */
+#match-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    width: 100%;
+}
+
+.team-name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.2em;
+    min-width: 150px;
+    text-align: center;
+}
+
+#your-team-name { color: #48ff48; }
+#cpu-team-name { color: #ff4848; }
+
+#scoreboard {
+    font-family: 'Russo One', sans-serif;
+    font-size: 2.5em;
+    color: #f5c518;
+}
+
+#match-timer {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.2em;
+    color: #8899aa;
+}
+
+#pitch {
+    background: #1a6b30;
+    border-radius: 8px;
+    border: 2px solid #48ff48;
+    width: 100%;
+    max-width: 800px;
+}
+
+#match-commentary {
+    background: rgba(0,0,0,0.4);
+    border-radius: 8px;
+    padding: 12px 20px;
+    min-height: 60px;
+    width: 100%;
+    max-width: 800px;
+    font-size: 0.95em;
+    color: #ccdde8;
+    text-align: center;
+    line-height: 1.6;
+}
+
+/* Result Screen */
+#result-title {
+    font-size: 2.5em;
+    margin-top: 40px;
+}
+
+#result-score {
+    font-family: 'Russo One', sans-serif;
+    font-size: 3em;
+    color: #f5c518;
+}
+
+#result-details {
+    text-align: center;
+    color: #8899aa;
+    line-height: 1.8;
+    font-size: 1.1em;
+    max-width: 600px;
+}
+
+/* Result buttons */
+#result-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #2a4a6a, #1a2d4a) !important;
+    color: #f5c518 !important;
+    border: 2px solid #4a6a8a !important;
+}
+
+.btn-secondary:hover {
+    border-color: #f5c518 !important;
+}
+
+/* Stat Legend */
+#stat-legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 16px 20px;
+    margin-top: 30px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    font-size: 0.85em;
+    color: #8899aa;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#stat-legend strong {
+    color: #f5c518;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    h1 { font-size: 2.2em; }
+    .player-card { width: 130px; padding: 8px 6px; }
+    .card-avatar { width: 60px; height: 60px; }
+    .card-rating { font-size: 1.4em; }
+    .btn-tactic { width: 160px; padding: 16px 12px; }
+    #match-header { gap: 10px; }
+    .team-name { font-size: 0.9em; min-width: auto; }
+    #scoreboard { font-size: 1.8em; }
+}

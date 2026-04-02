@@ -176,6 +176,35 @@ body {
     background: rgba(255, 255, 255, 0.2);
 }
 
+.menu-btn {
+    padding: 10px 24px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.menu-btn-danger {
+    border-color: rgba(244, 67, 54, 0.5);
+    color: #f44336;
+}
+
+.menu-btn-danger:hover {
+    background: rgba(244, 67, 54, 0.2);
+}
+
+#save-load-buttons {
+    display: flex;
+    justify-content: center;
+}
+
 #break-indicator {
     position: fixed;
     top: 50%;
@@ -273,6 +302,21 @@ body {
 
 #crafting-close:hover {
     background: rgba(255, 255, 255, 0.25);
+}
+
+/* Time display */
+#time-display {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 10;
+    display: none;
+    font-family: monospace;
 }
 
 /* Message display */

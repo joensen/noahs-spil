@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Team</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <!-- INTRO SCREEN -->
+        <div id="intro-screen" class="screen active">
+            <h1>ULTIMATE TEAM</h1>
+            <div class="intro-text">
+                <p>Du starter med 3 pakker - find fodboldspillere!</p>
+                <p>Byg dit drømmehold med 11 spillere.</p>
+                <p>Vind kampe for at få flere pakker!</p>
+            </div>
+            <button id="btn-start" class="btn-main">ÅBN PAKKER</button>
+        </div>
+
+        <!-- PACK OPENING SCREEN -->
+        <div id="pack-screen" class="screen">
+            <div id="pack-header">
+                <h2>Åbn Pakker</h2>
+                <div id="pack-info">Pakker åbnet: <span id="packs-opened">0</span> &mdash; Pakker klar: <span id="packs-total">3</span> &mdash; Spillere samlet: <span id="players-collected">0</span></div>
+            </div>
+            <div id="pack-area">
+                <div id="pack-box" class="clickable">
+                    <div class="pack-front">
+                        <div class="pack-glow"></div>
+                        <span>KLIK FOR AT ÅBNE</span>
+                    </div>
+                </div>
+            </div>
+            <div id="pack-cards"></div>
+            <button id="btn-next-pack" class="btn-main hidden">NÆSTE PAKKE</button>
+            <button id="btn-build-team" class="btn-main hidden">BYG DIT HOLD</button>
+            <button id="btn-go-to-tactic" class="btn-main hidden">SPIL KAMP</button>
+        </div>
+
+        <!-- TEAM SELECTION SCREEN -->
+        <div id="team-screen" class="screen">
+            <h2>Byg Dit Hold</h2>
+            <p class="sub">Vælg 11 spillere til din trup. Klik på en spiller for at tilføje/fjerne.</p>
+            <div id="team-selected-count">Valgt: <span id="sel-count">0</span>/11</div>
+            <div id="player-pool"></div>
+            <button id="btn-confirm-team" class="btn-main hidden">BEKRÆFT HOLD</button>
+        </div>
+
+        <!-- TACTIC SCREEN -->
+        <div id="tactic-screen" class="screen">
+            <h2>Vælg Din Taktik</h2>
+            <div id="your-team-preview"></div>
+            <div id="tactic-buttons">
+                <button class="btn-tactic" data-tactic="offensive">
+                    <span class="tactic-icon">&#9876;</span>
+                    <span class="tactic-name">Offensiv</span>
+                    <span class="tactic-desc">Flere mål, svagere forsvar</span>
+                </button>
+                <button class="btn-tactic" data-tactic="defensive">
+                    <span class="tactic-icon">&#128737;</span>
+                    <span class="tactic-name">Defensiv</span>
+                    <span class="tactic-desc">Solidt forsvar, færre mål</span>
+                </button>
+                <button class="btn-tactic" data-tactic="balanced">
+                    <span class="tactic-icon">&#9878;</span>
+                    <span class="tactic-name">Balanceret</span>
+                    <span class="tactic-desc">Allround tilgang</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MATCH SCREEN -->
+        <div id="match-screen" class="screen">
+            <div id="match-header">
+                <div class="team-name" id="your-team-name">DIT HOLD</div>
+                <div id="scoreboard">
+                    <span id="score-home">0</span> - <span id="score-away">0</span>
+                </div>
+                <div class="team-name" id="cpu-team-name">MODSTANDER</div>
+            </div>
+            <div id="match-timer">0:00</div>
+            <canvas id="pitch" width="900" height="560"></canvas>
+            <div id="match-commentary"></div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="result-screen" class="screen">
+            <h2 id="result-title"></h2>
+            <div id="result-score"></div>
+            <div id="result-details"></div>
+            <div id="result-buttons">
+                <button id="btn-play-again" class="btn-main">SPIL IGEN</button>
+                <button id="btn-change-team" class="btn-main btn-secondary">SKIFT HOLD</button>
+                <button id="btn-open-pack" class="btn-main btn-secondary hidden">ÅBN PAKKE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stat-legend">
+        <span><strong>PAC</strong> = Fart</span>
+        <span><strong>SHO</strong> = Skud</span>
+        <span><strong>PAS</strong> = Afleveringer</span>
+        <span><strong>DEF</strong> = Forsvar</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

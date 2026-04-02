@@ -13,6 +13,8 @@
 
     <div id="toolbar"></div>
 
+    <div id="time-display"></div>
+
     <div id="interaction-hint"></div>
     <div id="message-display"></div>
 
@@ -28,13 +30,19 @@
         <p>Overlev og byg i en 3D-verden!</p>
         <div class="instructions">
             <p><strong>Kontroller:</strong></p>
-            <p>WASD - Bevæg dig | Mellemrum - Hop</p>
+            <p>WASD - Bevæg dig | Dobbelt-W - Sprint | Mellemrum - Hop</p>
             <p>Mus - Kig rundt | ESC - Slip mus</p>
             <p>Venstre klik - Ødelæg blok | Højre klik - Placer blok</p>
             <p>1-9 - Vælg plads i toolbar</p>
             <p>E - Åbn crafting (stå ved arbejdsbord for alle opskrifter)</p>
         </div>
         <button id="start-button">Klik for at spille</button>
+        <div id="save-load-buttons" style="display:none; margin-top: 12px; gap: 10px;">
+            <button id="save-button" class="menu-btn">Gem spil</button>
+            <button id="load-button" class="menu-btn">Indlæs spil</button>
+            <button id="delete-save-button" class="menu-btn menu-btn-danger">Slet gemte data</button>
+        </div>
+        <button id="load-button-start" class="menu-btn" style="display:none; margin-top: 12px;">Indlæs gemt spil</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
