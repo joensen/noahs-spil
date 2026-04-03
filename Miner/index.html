@@ -21,6 +21,20 @@
     <div id="crafting-screen">
         <h2>Crafting</h2>
         <div id="recipe-list"></div>
+
+        <div id="custom-crafting" style="display:none">
+            <p style="text-align:center;color:#aaa;font-size:13px;margin-bottom:10px;">Eget opskrift</p>
+            <div id="craft-grid-area">
+                <div id="craft-grid"></div>
+                <div id="craft-arrow">→</div>
+                <div id="craft-result-slot"></div>
+            </div>
+            <div id="item-picker"></div>
+            <div style="text-align:center;margin-top:8px;">
+                <button id="custom-craft-btn" class="craft-btn" disabled>Lav</button>
+            </div>
+        </div>
+
         <button id="crafting-close">Luk (E)</button>
     </div>
 
@@ -46,6 +60,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>

@@ -1,17 +1,37 @@
 # Miner — CLAUDE.md
 
 ## What is this?
-A Minecraft-inspired 3D voxel survival game built with vanilla JavaScript and Three.js (r128 via CDN). Single file architecture — all game logic lives in `script.js` (~1700 lines). Danish UI throughout.
+A Minecraft-inspired 3D voxel survival game built with vanilla JavaScript and Three.js (r128 via CDN). Uses ES modules — requires a local dev server (e.g. `python -m http.server 8000`). Danish UI throughout.
 
 ## Files
-- `index.html` — Game shell, HUD elements (crosshair, toolbar, crafting screen, menu), loads Three.js from CDN
-- `script.js` — All game logic (see architecture below)
+- `index.html` — Game shell, HUD elements (crosshair, toolbar, crafting screen, menu), loads Three.js from CDN then `main.js` as an ES module
 - `style.css` — HUD and overlay styling
 - `features.md` — Feature roadmap with dependency ordering; implemented features are marked with ✅
 
-## Architecture of script.js
+### JavaScript modules (load order: leaf → root)
+| File | Responsibility | Imports from |
+|---|---|---|
+| `constants.js` | BLOCK_TYPES, TOOLS, RECIPES, FACES, game constants | — |
+| `noise.js` | SimplexNoise class, fbm2d | — |
+| `state.js` | Shared Three.js objects, game flags (`shared` object) | — |
+| `textures.js` | Texture generation, `materials` dict, icon drawing helpers | constants |
+| `world.js` | `world` dict, `getBlock`/`setBlock`, biomes, terrain gen | constants, noise |
+| `chunks.js` | Chunk mesh building and loading | constants, world, textures, state |
+| `inventory.js` | Inventory, toolbar, tool state; callback pattern to avoid circular dep with ui.js | constants |
+| `ui.js` | `renderToolbar`, `showMessage` | constants, inventory, textures |
+| `physics.js` | Player movement, collision detection | constants, world, state, chunks |
+| `interaction.js` | Block targeting, break/place, torch lights | constants, world, chunks, inventory, ui, state |
+| `crafting.js` | Crafting screen, custom 3×3 grid, recipe matching | constants, inventory, world, state, ui, textures |
+| `save.js` | IndexedDB save/load | constants, world, chunks, inventory, physics, state, ui, interaction |
+| `main.js` | init, animate loop, event handlers, day/night cycle | everything |
 
-The file is organized into labeled sections (`// ===== SECTION =====`). Here's the data flow:
+### Key design decisions
+- `THREE` is a CDN global — all modules access it without importing
+- `setBlock` in world.js is pure (no Three.js); torch lights are managed in interaction.js
+- `inventory.js` uses a registered callback (`setInventoryChangedCallback`) to trigger `renderToolbar` without importing ui.js, avoiding a circular dep
+- `shared` (state.js) holds scene, camera, renderer, lights, torchLights, and game flags so modules that need them don't have to import from main.js
+
+## Architecture — Data Flow
 
 ### World Data
 - `world` object: flat dictionary mapping `"x,y,z"` string keys to block type strings (e.g. `"grass"`, `"stone"`)

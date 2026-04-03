@@ -340,6 +340,134 @@ body {
     opacity: 1;
 }
 
+/* Custom crafting grid */
+#custom-crafting {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#craft-grid-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+#craft-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    gap: 3px;
+}
+
+.craft-grid-slot {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.craft-grid-slot:hover {
+    border-color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.craft-grid-slot canvas {
+    image-rendering: pixelated;
+}
+
+#craft-arrow {
+    font-size: 22px;
+    color: #aaa;
+}
+
+#craft-result-slot {
+    width: 52px;
+    height: 52px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+#craft-result-slot canvas {
+    image-rendering: pixelated;
+}
+
+.result-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 11px;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+}
+
+/* Item picker */
+#item-picker {
+    display: none;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    max-height: 90px;
+    overflow-y: auto;
+}
+
+.picker-item {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.picker-item:hover {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.picker-item canvas {
+    image-rendering: pixelated;
+}
+
+.picker-count {
+    position: absolute;
+    bottom: 1px;
+    right: 2px;
+    font-size: 9px;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+}
+
+/* Recipe row icon */
+.recipe-row canvas {
+    image-rendering: pixelated;
+    flex-shrink: 0;
+    margin-right: 6px;
+}
+
 /* Interaction hint */
 #interaction-hint {
     position: fixed;

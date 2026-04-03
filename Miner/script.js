@@ -1,10 +1,11 @@
 // ===== MINER - 3D Block Building Game (Survival Mode) =====
 
 // ===== CONSTANTS =====
-const BLOCK_TYPES = ['grass', 'dirt', 'stone', 'wood', 'sand', 'brick', 'leaves', 'workbench', 'snow', 'cactus'];
+const BLOCK_TYPES = ['grass', 'dirt', 'stone', 'coal', 'wood', 'sand', 'brick', 'leaves', 'workbench', 'snow', 'cactus', 'torch'];
 const BLOCK_HARDNESS = {
-    grass: 3, dirt: 3, stone: 5, wood: 4, sand: 2, brick: 5, leaves: 1, workbench: 4, snow: 2, cactus: 2
+    grass: 3, dirt: 3, stone: 5, coal: 4, wood: 4, sand: 2, brick: 5, leaves: 1, workbench: 4, snow: 2, cactus: 2, torch: 1
 };
+const NON_BLOCK_ITEMS = ['stick']; // craftable items that aren't placeable blocks
 const CHUNK_SIZE = 16;
 const RENDER_DISTANCE = 6;       // chunks
 const CHUNKS_PER_FRAME = 2;      // max chunks to generate+mesh per frame
@@ -13,7 +14,7 @@ const MOVE_SPEED = 5;
 const SPRINT_SPEED = 8.5;
 const DOUBLE_TAP_TIME = 300; // ms
 const GRAVITY = 20;
-const JUMP_VELOCITY = 8;
+const JUMP_VELOCITY = 6.5;
 const PI_2 = Math.PI / 2;
 const REACH_DISTANCE = 6;
 const TOOLBAR_SLOTS = 9;
@@ -28,10 +29,12 @@ const TOOLS = {
 
 // ===== RECIPES =====
 const RECIPES = [
-    { id: 'workbench_block', name: 'Arbejdsbord', result: { type: 'block', item: 'workbench' }, cost: { wood: 4 }, needsWorkbench: false },
-    { id: 'wooden_pickaxe',  name: 'Træhakke',    result: { type: 'tool',  item: 'wooden_pickaxe' }, cost: { wood: 3 }, needsWorkbench: true },
-    { id: 'wooden_axe',      name: 'Træøkse',     result: { type: 'tool',  item: 'wooden_axe' },     cost: { wood: 3 }, needsWorkbench: true },
-    { id: 'wooden_shovel',   name: 'Træskovl',    result: { type: 'tool',  item: 'wooden_shovel' },  cost: { wood: 2 }, needsWorkbench: true },
+    { id: 'workbench_block', name: 'Arbejdsbord', result: { type: 'block', item: 'workbench',       amount: 1 }, cost: { wood: 4 },             needsWorkbench: false },
+    { id: 'stick',           name: 'Pinde',       result: { type: 'item',  item: 'stick',           amount: 4 }, cost: { wood: 1 },             needsWorkbench: false },
+    { id: 'torch',           name: 'Fakkel',      result: { type: 'block', item: 'torch',           amount: 4 }, cost: { coal: 1, stick: 1 },  needsWorkbench: false },
+    { id: 'wooden_pickaxe',  name: 'Træhakke',    result: { type: 'tool',  item: 'wooden_pickaxe',  amount: 1 }, cost: { wood: 3 },             needsWorkbench: true },
+    { id: 'wooden_axe',      name: 'Træøkse',     result: { type: 'tool',  item: 'wooden_axe',      amount: 1 }, cost: { wood: 3 },             needsWorkbench: true },
+    { id: 'wooden_shovel',   name: 'Træskovl',    result: { type: 'tool',  item: 'wooden_shovel',   amount: 1 }, cost: { wood: 2 },             needsWorkbench: true },
 ];
 
 // ===== STATE =====
@@ -91,6 +94,15 @@ const toolbar = new Array(TOOLBAR_SLOTS).fill(null);
 toolbar[0] = { type: 'tool', item: 'hand' };
 
 let selectedSlot = 0;
+
+// Torch lights: "x,y,z" -> PointLight
+const torchLights = {};
+
+// Hold-to-mine state
+let isMouseHeld = false;
+let breakTimer = 0;
+const BREAK_INTERVAL = 0.25; // seconds between hits
+let lastBreakTarget = null;  // "x,y,z" key of block currently being mined
 
 // Message system
 let messageTimer = null;
@@ -243,6 +255,46 @@ function createBlockTexture(type) {
                 const y = Math.floor(Math.random() * (size - 2));
                 ctx.fillRect(x, y, 2, 1);
             }
+            break;
+
+        case 'coal':
+            // Stone base with black coal speckles
+            ctx.fillStyle = '#888';
+            ctx.fillRect(0, 0, size, size);
+            for (let i = 0; i < 20; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#777' : '#999';
+                const cx2 = Math.floor(Math.random() * size);
+                const cy2 = Math.floor(Math.random() * size);
+                ctx.fillRect(cx2, cy2, 1, 1);
+            }
+            for (let i = 0; i < 6; i++) {
+                ctx.fillStyle = '#1a1a1a';
+                const cx2 = Math.floor(Math.random() * (size - 3));
+                const cy2 = Math.floor(Math.random() * (size - 3));
+                ctx.fillRect(cx2, cy2, 2 + Math.floor(Math.random() * 2), 2 + Math.floor(Math.random() * 2));
+            }
+            break;
+
+        case 'torch':
+            ctx.fillStyle = '#1a1008';
+            ctx.fillRect(0, 0, size, size);
+            // Wooden stick
+            ctx.fillStyle = '#6B4810';
+            ctx.fillRect(6, 5, 4, 11);
+            ctx.fillStyle = '#8B6220';
+            ctx.fillRect(7, 5, 2, 11);
+            // Flame (outer)
+            ctx.fillStyle = '#cc4400';
+            ctx.fillRect(5, 2, 6, 4);
+            // Flame (mid)
+            ctx.fillStyle = '#ff8800';
+            ctx.fillRect(6, 1, 4, 4);
+            // Flame (inner)
+            ctx.fillStyle = '#ffdd00';
+            ctx.fillRect(7, 1, 2, 3);
+            // Bright tip
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(7, 1, 1, 1);
             break;
 
         case 'cactus':
@@ -420,10 +472,22 @@ function getBlock(x, y, z) {
 }
 
 function setBlock(x, y, z, type) {
+    const key = `${x},${y},${z}`;
+    const oldType = world[key];
     if (type) {
-        world[`${x},${y},${z}`] = type;
+        world[key] = type;
     } else {
-        delete world[`${x},${y},${z}`];
+        delete world[key];
+    }
+    // Manage torch point lights
+    if (type === 'torch' && oldType !== 'torch' && scene) {
+        const light = new THREE.PointLight(0xffaa44, 1.5, 12);
+        light.position.set(x + 0.5, y + 0.5, z + 0.5);
+        scene.add(light);
+        torchLights[key] = light;
+    } else if (!type && oldType === 'torch' && torchLights[key]) {
+        scene.remove(torchLights[key]);
+        delete torchLights[key];
     }
 }
 
@@ -727,6 +791,18 @@ function generateChunkData(cx, cz) {
                 }
             }
             setBlock(tx, leafBase + 3, tz, 'leaves');
+        }
+    }
+
+    // Pass 4 — Coal ore generation (underground stone layer)
+    for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+        for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+            const x = sx + lx, z = sz + lz;
+            for (let y = -15; y <= 8; y++) {
+                if (getBlock(x, y, z) !== 'stone') continue;
+                const n = terrainNoise.noise3d(x * 0.2 + 500, y * 0.2 + 500, z * 0.2 + 500);
+                if (n > 0.55) setBlock(x, y, z, 'coal');
+            }
         }
     }
 }
@@ -1050,6 +1126,7 @@ function removeFromInventory(blockType) {
 }
 
 function autoAssignToToolbar(blockType) {
+    if (!BLOCK_TYPES.includes(blockType)) return; // non-block items don't go in toolbar
     for (let i = 0; i < TOOLBAR_SLOTS; i++) {
         if (toolbar[i] && toolbar[i].type === 'block' && toolbar[i].item === blockType) return;
     }
@@ -1157,6 +1234,7 @@ function placeBlock() {
     if (!slot || slot.type !== 'block') return;
 
     const blockType = slot.item;
+    if (NON_BLOCK_ITEMS.includes(blockType)) return; // can't place crafting materials
     if (!inventory[blockType] || inventory[blockType] <= 0) return;
 
     removeFromInventory(blockType);
@@ -1378,9 +1456,23 @@ function onMouseDown(event) {
     if (!isPointerLocked) return;
 
     if (event.button === 0) {
-        breakBlock();
+        isMouseHeld = true;
+        breakTimer = BREAK_INTERVAL; // fire on the very first frame
     } else if (event.button === 2) {
         placeBlock();
+    }
+}
+
+function onMouseUp(event) {
+    if (event.button === 0) {
+        isMouseHeld = false;
+        // Reset partial break progress if block wasn't finished
+        if (lastBreakTarget && breakProgress[lastBreakTarget]) {
+            delete breakProgress[lastBreakTarget];
+            if (breakOverlay) breakOverlay.visible = false;
+        }
+        lastBreakTarget = null;
+        breakTimer = 0;
     }
 }
 
@@ -1574,6 +1666,191 @@ function renderToolbar() {
     }
 }
 
+// ===== ITEM RENDERING HELPERS =====
+function drawItemIcon(ctx, itemId) {
+    const w = ctx.canvas.width;
+    const h = ctx.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    switch (itemId) {
+        case 'stick':
+            ctx.fillStyle = '#6B4810';
+            ctx.fillRect(Math.round(w * 0.38), Math.round(h * 0.06), Math.round(w * 0.25), Math.round(h * 0.88));
+            ctx.fillStyle = '#A0722A';
+            ctx.fillRect(Math.round(w * 0.44), Math.round(h * 0.06), Math.round(w * 0.08), Math.round(h * 0.88));
+            break;
+    }
+}
+
+function renderItemOnCanvas(ctx, item) {
+    if (BLOCK_TYPES.includes(item)) {
+        const texCanvas = getCachedBlockTexture(item);
+        ctx.drawImage(texCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
+    } else {
+        drawItemIcon(ctx, item);
+    }
+}
+
+// ===== CUSTOM CRAFTING GRID =====
+const craftGrid = new Array(9).fill(null);
+let pickerSlotIndex = -1;
+let customCraftResult = null;
+
+function renderCraftGrid() {
+    const grid = document.getElementById('craft-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    for (let i = 0; i < 9; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'craft-grid-slot';
+
+        const item = craftGrid[i];
+        if (item) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32; canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            renderItemOnCanvas(ctx, item);
+            slot.appendChild(canvas);
+        }
+
+        slot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (item) {
+                craftGrid[i] = null;
+                document.getElementById('item-picker').style.display = 'none';
+            } else {
+                showItemPicker(i);
+            }
+            renderCraftGrid();
+            checkCustomRecipe();
+        });
+        grid.appendChild(slot);
+    }
+
+    updateCraftResult();
+}
+
+function showItemPicker(slotIndex) {
+    pickerSlotIndex = slotIndex;
+    const picker = document.getElementById('item-picker');
+    picker.innerHTML = '';
+
+    const available = [];
+    for (const type of BLOCK_TYPES) {
+        if ((inventory[type] || 0) > 0) available.push(type);
+    }
+    for (const item of NON_BLOCK_ITEMS) {
+        if ((inventory[item] || 0) > 0) available.push(item);
+    }
+
+    if (available.length === 0) {
+        picker.style.display = 'none';
+        return;
+    }
+
+    for (const item of available) {
+        const div = document.createElement('div');
+        div.className = 'picker-item';
+        div.title = item;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 28; canvas.height = 28;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        renderItemOnCanvas(ctx, item);
+        div.appendChild(canvas);
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'picker-count';
+        countSpan.textContent = inventory[item] || 0;
+        div.appendChild(countSpan);
+
+        div.addEventListener('click', (e) => {
+            e.stopPropagation();
+            craftGrid[pickerSlotIndex] = item;
+            picker.style.display = 'none';
+            renderCraftGrid();
+            checkCustomRecipe();
+        });
+        picker.appendChild(div);
+    }
+
+    picker.style.display = 'flex';
+}
+
+function checkCustomRecipe() {
+    const gridItems = {};
+    for (const item of craftGrid) {
+        if (item) gridItems[item] = (gridItems[item] || 0) + 1;
+    }
+    const nearWB = isNearWorkbench();
+    customCraftResult = null;
+
+    for (const recipe of RECIPES) {
+        if (recipe.needsWorkbench && !nearWB) continue;
+        const cost = recipe.cost;
+        const costEntries = Object.entries(cost);
+        const gridEntries = Object.entries(gridItems);
+        if (costEntries.length !== gridEntries.length) continue;
+        let matches = true;
+        for (const [item, amount] of costEntries) {
+            if (gridItems[item] !== amount) { matches = false; break; }
+        }
+        if (matches) { customCraftResult = recipe; break; }
+    }
+    updateCraftResult();
+}
+
+function updateCraftResult() {
+    const resultSlot = document.getElementById('craft-result-slot');
+    const craftBtn = document.getElementById('custom-craft-btn');
+    if (!resultSlot || !craftBtn) return;
+    resultSlot.innerHTML = '';
+
+    if (customCraftResult) {
+        const r = customCraftResult.result;
+        const canvas = document.createElement('canvas');
+        canvas.width = 40; canvas.height = 40;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        if (r.type === 'tool') {
+            drawToolIcon(ctx, r.item);
+        } else {
+            renderItemOnCanvas(ctx, r.item);
+        }
+        resultSlot.appendChild(canvas);
+
+        if (r.amount && r.amount > 1) {
+            const span = document.createElement('span');
+            span.className = 'result-count';
+            span.textContent = r.amount;
+            resultSlot.appendChild(span);
+        }
+
+        let canAfford = true;
+        for (const [item, amount] of Object.entries(customCraftResult.cost)) {
+            if ((inventory[item] || 0) < amount) { canAfford = false; break; }
+        }
+        craftBtn.disabled = !canAfford;
+    } else {
+        craftBtn.disabled = true;
+    }
+}
+
+function craftFromGrid() {
+    if (!customCraftResult) return;
+    for (const [item, amount] of Object.entries(customCraftResult.cost)) {
+        if ((inventory[item] || 0) < amount) return;
+    }
+    craftItem(customCraftResult);
+    for (let i = 0; i < 9; i++) craftGrid[i] = null;
+    renderCraftGrid();
+    checkCustomRecipe();
+    // Refresh recipe list costs
+    openCrafting();
+}
+
 // ===== CRAFTING =====
 function isNearWorkbench() {
     const px = camera.position.x;
@@ -1621,9 +1898,25 @@ function openCrafting() {
         const row = document.createElement('div');
         row.className = 'recipe-row';
 
+        // Result icon
+        const iconCanvas = document.createElement('canvas');
+        iconCanvas.width = 24; iconCanvas.height = 24;
+        iconCanvas.style.cssText = 'image-rendering:pixelated;flex-shrink:0;';
+        const iconCtx = iconCanvas.getContext('2d');
+        iconCtx.imageSmoothingEnabled = false;
+        if (recipe.result.type === 'tool') {
+            const tmp = document.createElement('canvas');
+            tmp.width = 32; tmp.height = 32;
+            drawToolIcon(tmp.getContext('2d'), recipe.result.item);
+            iconCtx.drawImage(tmp, 0, 0, 24, 24);
+        } else {
+            renderItemOnCanvas(iconCtx, recipe.result.item);
+        }
+
         const nameSpan = document.createElement('span');
         nameSpan.className = 'recipe-name';
-        nameSpan.textContent = recipe.name;
+        const amtLabel = (recipe.result.amount && recipe.result.amount > 1) ? ` ×${recipe.result.amount}` : '';
+        nameSpan.textContent = recipe.name + amtLabel;
 
         const costSpan = document.createElement('span');
         costSpan.className = 'recipe-cost';
@@ -1646,6 +1939,7 @@ function openCrafting() {
             openCrafting();
         });
 
+        row.appendChild(iconCanvas);
         row.appendChild(nameSpan);
         row.appendChild(costSpan);
         row.appendChild(btn);
@@ -1659,12 +1953,24 @@ function openCrafting() {
         recipeList.appendChild(hint);
     }
 
+    // Show custom crafting grid only at workbench
+    const customDiv = document.getElementById('custom-crafting');
+    if (customDiv) {
+        customDiv.style.display = nearWB ? 'block' : 'none';
+        if (nearWB) {
+            renderCraftGrid();
+            checkCustomRecipe();
+        }
+    }
+
     document.getElementById('crafting-screen').style.display = 'block';
 }
 
 function closeCrafting() {
     craftingOpen = false;
     document.getElementById('crafting-screen').style.display = 'none';
+    document.getElementById('item-picker').style.display = 'none';
+    for (let i = 0; i < 9; i++) craftGrid[i] = null;
     document.body.requestPointerLock();
 }
 
@@ -1679,8 +1985,13 @@ function craftItem(recipe) {
         }
     }
 
+    const resultAmount = recipe.result.amount || 1;
     if (recipe.result.type === 'block') {
-        addToInventory(recipe.result.item);
+        for (let i = 0; i < resultAmount; i++) addToInventory(recipe.result.item);
+        showMessage(recipe.name + ' lavet!');
+    } else if (recipe.result.type === 'item') {
+        inventory[recipe.result.item] = (inventory[recipe.result.item] || 0) + resultAmount;
+        renderToolbar();
         showMessage(recipe.name + ' lavet!');
     } else if (recipe.result.type === 'tool') {
         addToolToInventory(recipe.result.item);
@@ -1791,6 +2102,12 @@ function applySaveData(saveData) {
     for (const key in world) delete world[key];
     generatedChunks.clear();
 
+    // Remove all existing torch lights
+    for (const key in torchLights) {
+        scene.remove(torchLights[key]);
+        delete torchLights[key];
+    }
+
     // Unload all chunk meshes
     for (const key in chunks) {
         const [cx, cz] = key.split(',').map(Number);
@@ -1800,6 +2117,17 @@ function applySaveData(saveData) {
     // Restore world blocks
     for (const key in saveData.world) {
         world[key] = saveData.world[key];
+    }
+
+    // Restore torch lights from saved world
+    for (const key in world) {
+        if (world[key] === 'torch') {
+            const [tx, ty, tz] = key.split(',').map(Number);
+            const light = new THREE.PointLight(0xffaa44, 1.5, 12);
+            light.position.set(tx + 0.5, ty + 0.5, tz + 0.5);
+            scene.add(light);
+            torchLights[key] = light;
+        }
     }
 
     // Restore generated chunks set
@@ -2007,6 +2335,7 @@ function init() {
     document.addEventListener('pointerlockchange', onPointerLockChange);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('contextmenu', onContextMenu);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
@@ -2021,6 +2350,12 @@ function init() {
     });
 
     document.getElementById('crafting-close').addEventListener('click', closeCrafting);
+    document.getElementById('custom-craft-btn').addEventListener('click', craftFromGrid);
+    // Close item picker when clicking outside
+    document.addEventListener('click', () => {
+        const picker = document.getElementById('item-picker');
+        if (picker) picker.style.display = 'none';
+    });
 
     // Show load button on start screen if save exists
     hasSaveGame().then(exists => {
@@ -2077,6 +2412,31 @@ function animate(currentTime) {
     if (isPointerLocked && gameStarted) {
         updatePlayerMovement(delta);
         updateTarget();
+
+        // Hold-to-mine
+        if (isMouseHeld) {
+            const currentKey = targetBlock ? `${targetBlock.x},${targetBlock.y},${targetBlock.z}` : null;
+            // Target changed while mining — reset old block's progress
+            if (lastBreakTarget && lastBreakTarget !== currentKey) {
+                delete breakProgress[lastBreakTarget];
+                if (breakOverlay) breakOverlay.visible = false;
+            }
+            lastBreakTarget = currentKey;
+            if (currentKey) {
+                breakTimer += delta;
+                if (breakTimer >= BREAK_INTERVAL) {
+                    breakTimer -= BREAK_INTERVAL;
+                    breakBlock();
+                    // If the block was just broken, reset for next block
+                    if (!getBlock(targetBlock.x, targetBlock.y, targetBlock.z)) {
+                        lastBreakTarget = null;
+                        breakTimer = 0;
+                    }
+                }
+            } else {
+                breakTimer = 0;
+            }
+        }
     }
 
     // Day/night cycle
