@@ -81,7 +81,7 @@ const games = [
         title: "Brainrot Navne",
         description: "Klik på brainrots og tjen kr! Køb flere brainrots og bliv rig! 🧠🚽",
         folder: "BrainrotNavne",
-        screenshot: "BrainrotNavne/screenshot.svg"
+        screenshot: "BrainrotNavne/screenshot.png"
     },
     {
         title: "Miner",
@@ -93,13 +93,13 @@ const games = [
         title: "Ultimate Team",
         description: "Åbn pakker med fodboldspillere, byg dit drømmehold og spil kamp mod computeren!",
         folder: "UltimateTeam",
-        screenshot: ""
+        screenshot: "UltimateTeam/screenshot.png"
     },
     {
         title: "Tetris",
         description: "Stack falling blocks, clear lines, and keep the board under control as the speed ramps up.",
         folder: "Tetris",
-        screenshot: "Tetris/screenshot.svg"
+        screenshot: "Tetris/screenshot.png"
     }
 ];
 
