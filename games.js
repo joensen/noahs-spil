@@ -94,6 +94,12 @@ const games = [
         description: "Åbn pakker med fodboldspillere, byg dit drømmehold og spil kamp mod computeren!",
         folder: "UltimateTeam",
         screenshot: ""
+    },
+    {
+        title: "Tetris",
+        description: "Stack falling blocks, clear lines, and keep the board under control as the speed ramps up.",
+        folder: "Tetris",
+        screenshot: "Tetris/screenshot.svg"
     }
 ];
 

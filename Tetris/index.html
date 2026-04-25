@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="game-shell">
+        <section class="panel intro-panel">
+            <p class="eyebrow">Noah's Arcade</p>
+            <h1>Tetris</h1>
+            <p class="tagline">Rotate, stack, and clear lines before the board fills up.</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Score</span>
+                    <strong id="score">0</strong>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Lines</span>
+                    <strong id="lines">0</strong>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Level</span>
+                    <strong id="level">1</strong>
+                </div>
+            </div>
+
+            <div class="controls-card">
+                <h2>Controls</h2>
+                <ul>
+                    <li><span>Move</span><strong>Left / Right</strong></li>
+                    <li><span>Rotate</span><strong>Up</strong></li>
+                    <li><span>Soft drop</span><strong>Down</strong></li>
+                    <li><span>Hard drop</span><strong>Space</strong></li>
+                    <li><span>Pause</span><strong>P</strong></li>
+                </ul>
+            </div>
+
+            <div class="button-row">
+                <button id="start-button" type="button">Start Game</button>
+                <button id="pause-button" type="button">Pause</button>
+            </div>
+
+            <p id="status" class="status-text">Press Start to begin.</p>
+        </section>
+
+        <section class="board-panel">
+            <div class="board-frame">
+                <canvas id="tetris" width="300" height="600" aria-label="Tetris game board"></canvas>
+                <div id="overlay" class="overlay hidden">
+                    <div class="overlay-card">
+                        <h2 id="overlay-title">Game Over</h2>
+                        <p id="overlay-message">Press Start to play.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="panel side-panel">
+            <div class="preview-card">
+                <h2>Next Piece</h2>
+                <canvas id="next-piece" width="120" height="120" aria-label="Next tetromino preview"></canvas>
+            </div>
+
+            <div class="tips-card">
+                <h2>Scoring</h2>
+                <ul>
+                    <li>Single line: 100</li>
+                    <li>Double line: 300</li>
+                    <li>Triple line: 500</li>
+                    <li>Tetris: 800</li>
+                </ul>
+            </div>
+        </aside>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
